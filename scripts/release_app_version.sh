@@ -23,7 +23,7 @@ if [ -z "$VERSION" ]; then
     exit 1
 fi
 
-if! git ls-remote --tags $APP_REPO_URL | sed -n "/$VERSION/p"; then
+if ! git ls-remote --tags $APP_REPO_URL | sed -n "/$VERSION/p"; then
     echo "App version: '$VERSION' does not exist in '$APP_REPO_URL'."
 fi
 
