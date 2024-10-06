@@ -68,14 +68,6 @@ elif [[ "$NEW_APP_MINOR" -ne "$CUR_APP_MINOR" ]]; then
     NEW_CHART_PATCH=0
 fi
 
-if [[ "$NO_MERGE" -ne "1" ]]; then
-    # Pull in app changes
-    if ! git merge "$VERSION"; then
-        printf '\n\e[1;31m%s\e[0m\n' "Merge failed; if there was a conflict please resolve and commit, and then re-run this script with the --no-merge flag"
-        exit 1
-    fi
-fi
-
 # Update chart
 CUR_CHART_MAJOR=$(echo $CUR_CHART_VERSION | cut -d. -f1)
 NEW_CHART_VERSION="${CUR_CHART_MAJOR}.${NEW_CHART_MINOR}.${NEW_CHART_PATCH}"
@@ -84,7 +76,7 @@ sed -E -e "s/version: ${CUR_CHART_VERSION}/version: ${NEW_CHART_VERSION}/g" -i "
 sed -E -e "s/tag: \".*\"/tag: \"${VERSION}\"/g" -i "" charts/crusoe-csi-driver/values.yaml
 
 # Create MR
-MR_DESC="**App changelog:**<br><br>$(git log origin/release..HEAD -- . ':!charts/' | awk -v ORS='<br>' '1')<br><br>**Chart changelog:**<br><br>$(git log origin/release..HEAD -- charts/ |  awk -v ORS='<br>' '1')<br>"
+MR_DESC="**Release version ${VERSION}**<br><br>"
 git add charts/crusoe-csi-driver/Chart.yaml charts/crusoe-csi-driver/values.yaml
 git commit -m "Update chart to $VERSION"
 # Push and open merge request
