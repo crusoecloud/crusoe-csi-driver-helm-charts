@@ -76,7 +76,7 @@ sed -E -e "s/version: ${CUR_CHART_VERSION}/version: ${NEW_CHART_VERSION}/g" -i "
 sed -E -e "s/tag: \".*\"/tag: \"${VERSION}\"/g" -i "" charts/crusoe-csi-driver/values.yaml
 
 # Create MR
-MR_DESC="**App changelog:**<br><br>$(git log $APP_REPO_URL/main..HEAD -- . ':!charts/' | awk -v ORS='<br>' '1')"
+MR_DESC="**Release version ${VERSION}**<br><br>"
 git add charts/crusoe-csi-driver/Chart.yaml charts/crusoe-csi-driver/values.yaml
 git commit -m "Update chart to $VERSION"
 # Push and open merge request
