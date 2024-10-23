@@ -1,14 +1,36 @@
 # Default values for crusoe-csi-driver.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-replicaCount: 1
-
+driverName: "csi.crusoe.ai"
 image:
   repository: ghcr.io/crusoecloud/crusoe-csi-driver
   tag: "v0.0.12"
 
-driverName: "csi.crusoe.ai"
+crusoe:
+  # If not running on a Crusoe Managed Kubernetes cluster, projectID should be set to the Crusoe Cloud project ID
+  # for your cluster.
+  projectID: ""
 
-resources: {}
+secrets:
+  crusoeApiKeys:
+    # The Crusoe CSI Driver requires access to the Crusoe API in order to manage and mount Crusoe Storage Disks
+    # It is expected that the secret contains two keys: CRUSOE_CSI_ACCESS_KEY and CRUSOE_CSI_SECRET_KEY containing
+    # the base64 encoded access key and secret key respectively
+    secretName: "crusoe-api-keys"
+controller:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 200Mi
+    limits:
+      cpu: 100m
+      memory: 200Mi
 
-ingress: {}
+node:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 200Mi
+    limits:
+      cpu: 100m
+      memory: 200Mi
