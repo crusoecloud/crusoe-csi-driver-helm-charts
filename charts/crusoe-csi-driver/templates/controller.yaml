@@ -12,8 +12,6 @@ spec:
       labels:
         app: {{.Release.Name }}
     spec:
-      imagePullSecrets:
-        - name: registry-credentials
       serviceAccountName: crusoe-csi-driver-controller-sa
       containers:
         - name: crusoe-csi-driver
