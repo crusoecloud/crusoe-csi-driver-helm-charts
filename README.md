@@ -1,7 +1,6 @@
 ## Crusoe Container Storage Interface (CSI) Helm Charts
 
-This repository defines the official Container Storage Interface (CSI) Helm Charts for use with [Crusoe Cloud](https://crusoecloud.com/), 
-the world's first carbon-reducing, low-cost GPU cloud platform.
+This repository defines the official Container Storage Interface (CSI) Helm Charts for use with [Crusoe Cloud](https://crusoecloud.com/).
 
 **The CSI Helm Charts are currently in :construction: Alpha :construction:.**
 
