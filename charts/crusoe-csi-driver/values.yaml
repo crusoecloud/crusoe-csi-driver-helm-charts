@@ -13,9 +13,9 @@ crusoe:
 
 secrets:
   crusoeApiKeys:
-    # The Crusoe CSI Driver requires access to the Crusoe API in order to manage and mount Crusoe Storage Disks
-    # It is expected that the secret contains two keys: CRUSOE_CSI_ACCESS_KEY and CRUSOE_CSI_SECRET_KEY containing
-    # the base64 encoded access key and secret key respectively
+    # The Crusoe CSI Driver requires access to the Crusoe API in order to manage and mount Crusoe Storage Disks.
+    # It is expected that the secret will contain two keys: CRUSOE_CSI_ACCESS_KEY and CRUSOE_CSI_SECRET_KEY containing
+    # the base64 encoded access key and secret key respectively.
     secretName: "crusoe-api-keys"
 controller:
   resources:
