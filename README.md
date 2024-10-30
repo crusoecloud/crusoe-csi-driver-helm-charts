@@ -73,4 +73,4 @@ The name of the secret containing the access and secret keys can be changed by m
 ## Non-CMK Deployments
 
 If you are deploying on a self-managed Kubernetes cluster, it is **strongly recommended** that you change the `crusoe.projectID` value to the Crusoe project ID
-that contains your node VMs.
+that contains your node VMs. **The Crusoe CSI Driver requires that the names of the Kubernetes node objects match the name of the VM they are deployed on in Crusoe Cloud**.
