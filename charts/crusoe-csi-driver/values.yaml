@@ -4,7 +4,7 @@
 driverName: "csi.crusoe.ai"
 image:
   repository: ghcr.io/crusoecloud/crusoe-csi-driver
-  tag: "v0.0.12"
+  tag: "v0.0.14"
 
 crusoe:
   # If not running on a Crusoe Managed Kubernetes cluster, projectID should be set to the Crusoe Cloud project ID
