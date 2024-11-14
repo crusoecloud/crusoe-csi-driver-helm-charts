@@ -1,0 +1,6 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: crusoe-csi-driver-sc
+provisioner: csi.crusoe.ai
+volumeBindingMode: WaitForFirstConsumer

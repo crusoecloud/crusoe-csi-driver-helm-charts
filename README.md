@@ -49,7 +49,7 @@ Helm's [documentation](https://helm.sh/docs) to get started.
 
 Once Helm has been set up correctly, add the repo as follows:
 
-helm repo add <repo alias> https://crusoecloud.github.io/crusoe-csi-driver-helm-charts
+    helm repo add <repo alias> https://crusoecloud.github.io/crusoe-csi-driver-helm-charts/charts
 
 If you have already added this repo earlier, run `helm repo update` to retrieve
 the latest versions of the packages.  You can then run `helm search repo
@@ -60,7 +60,7 @@ the latest versions of the packages.  You can then run `helm search repo
 
 To install the Crusoe CSI Driver chart:
 
-    helm install <chart alias> <repo alias>/crusoe-csi-driver-helm-charts
+    helm install <chart alias> <repo alias>/crusoe-csi-driver
 
 To uninstall the chart:
 

@@ -1,0 +1,27 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-mount
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example-mount
+  template:
+    metadata:
+      labels:
+        app: example-mount
+    spec:
+      containers:
+        - name: example-mount
+          image: ubuntu:24.04
+          command: ["sleep", "infinity"]
+          volumeMounts:
+            - mountPath: "/vol/myvolume"
+              name: myvolume
+      volumes:
+        - name: myvolume
+          persistentVolumeClaim:
+            claimName: mountpvc
+            readOnly: false

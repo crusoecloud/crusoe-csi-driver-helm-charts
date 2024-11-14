@@ -1,0 +1,27 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-block
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example-block
+  template:
+    metadata:
+      labels:
+        app: example-block
+    spec:
+      containers:
+        - name: example-block
+          image: ubuntu:24.04
+          command: ["sleep", "infinity"]
+          volumeDevices:
+            - devicePath: "/dev/xvda"
+              name: myblockdevice
+      volumes:
+        - name: myblockdevice
+          persistentVolumeClaim:
+            claimName: blockpvc
+            readOnly: false
