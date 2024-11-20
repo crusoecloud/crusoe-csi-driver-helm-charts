@@ -1,25 +1,31 @@
+{{ define "controller" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{.Release.Name }}-controller
+  name: {{.Release.Name }}-{{ .csiType }}-controller
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{.Release.Name }}
+      app: {{.Release.Name }}-{{ .csiType }}
   template:
     metadata:
       labels:
-        app: {{.Release.Name }}
+        app: {{.Release.Name }}-{{ .csiType }}
     spec:
-      serviceAccountName: crusoe-csi-driver-controller-sa
+      serviceAccountName: {{ .Release.Name }}-controller-sa
+      {{- with .Values.controller.crusoeCsiDriver.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: crusoe-csi-driver
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: Always
+          image: "{{ .Values.controller.crusoeCsiDriver.image.repository }}:{{ .Values.controller.crusoeCsiDriver.image.tag }}"
+          imagePullPolicy: {{ .Values.controller.crusoeCsiDriver.image.imagePullPolicy }}
           args:
+            - "--crusoe-csi-driver-type={{ .csiType }}"
             - "--services=controller,identity"
-            - "--socket-address=unix:/csi/csi-controller.sock"
+            - "--socket-address=unix:/csi/{{ .csiType }}-controller.sock"
           env:
             - name: POD_NAME
               valueFrom:
@@ -35,7 +41,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: {{.Values.secrets.crusoeApiKeys.secretName}}
+                name: {{.Values.crusoe.secrets.crusoeApiKeys.secretName}}
                 optional: false
           volumeMounts:
             - name: socket-dir
@@ -45,23 +51,23 @@ spec:
               mountPropagation: "Bidirectional"
           securityContext:
             privileged: true
-          {{- with .Values.controller.resources }}
+          {{- with .Values.controller.crusoeCsiDriver.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         - name: csi-attacher
-          image: registry.k8s.io/sig-storage/csi-attacher:v4.4.0
+          image: "{{ .Values.controller.attacher.image.repository }}:{{ .Values.controller.attacher.image.tag }}"
           args:
             - "--v=5"
-            - "--csi-address=/csi/csi-controller.sock"
+            - "--csi-address=/csi/{{ .csiType }}-controller.sock"
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
         - name: csi-provisioner
-          image: registry.k8s.io/sig-storage/csi-provisioner:v3.6.0
+          image: "{{ .Values.controller.provisioner.image.repository }}:{{ .Values.controller.provisioner.image.tag }}"
           args:
             - "--v=5"
-            - "--csi-address=/csi/csi-controller.sock"
+            - "--csi-address=/csi/{{ .csiType }}-controller.sock"
             - "--feature-gates=Topology=true"
             - "--extra-create-metadata"
             - "--default-fstype=ext4"
@@ -70,11 +76,11 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-resizer
-          image: registry.k8s.io/sig-storage/csi-resizer:v1.9.0
+          image: "{{ .Values.controller.resizer.image.repository }}:{{ .Values.controller.resizer.image.tag }}"
           args:
             - "--v=5"
-            - "--csi-address=/csi/csi-controller.sock"
-            - "--handle-volume-inuse-error=false"
+            - "--csi-address=/csi/{{ .csiType }}-controller.sock"
+            - "--handle-volume-inuse-error=true"
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -89,3 +95,4 @@ spec:
           hostPath:
             path: /var/lib/kubelet
             type: Directory
+{{ end }}

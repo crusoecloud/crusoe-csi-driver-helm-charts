@@ -1,24 +1,30 @@
+{{ define "node" }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{.Release.Name }}-node
+  name: {{.Release.Name }}-{{ .csiType }}-node
 spec:
   selector:
     matchLabels:
-      app: {{.Release.Name }}
+      app: {{.Release.Name }}-{{ .csiType }}
   template:
     metadata:
       labels:
-        app: {{.Release.Name }}
+        app: {{.Release.Name }}-{{ .csiType }}
     spec:
-      serviceAccountName: crusoe-csi-driver-node-sa
+      serviceAccountName: {{ .Release.Name }}-node-sa
+      {{- with .Values.node.crusoeCsiDriver.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: crusoe-csi-driver
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: Always
+          image: "{{ .Values.node.crusoeCsiDriver.image.repository }}:{{ .Values.node.crusoeCsiDriver.image.tag }}"
+          imagePullPolicy: {{ .Values.node.crusoeCsiDriver.image.imagePullPolicy }}
           args:
+            - "--crusoe-csi-driver-type={{ .csiType }}"
             - "--services=node,identity"
-            - "--socket-address=unix:/csi/csi-node.sock"
+            - "--socket-address=unix:/csi/{{ .csiType }}-node.sock"
           env:
             - name: POD_NAME
               valueFrom:
@@ -34,7 +40,7 @@ spec:
             {{- end }}
           envFrom:
             - secretRef:
-                name: {{.Values.secrets.crusoeApiKeys.secretName}}
+                name: {{.Values.crusoe.secrets.crusoeApiKeys.secretName}}
                 optional: false
           volumeMounts:
             - name: socket-dir
@@ -46,16 +52,16 @@ spec:
               mountPath: /dev
           securityContext:
             privileged: true
-          {{- with .Values.node.resources }}
+          {{- with .Values.node.crusoeCsiDriver.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         - name: csi-driver-registrar
-          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.9.0
+          image: "{{ .Values.node.driverRegistrar.image.repository }}:{{ .Values.node.driverRegistrar.image.tag }}"
           args:
             - "--v=5"
-            - "--csi-address=/csi/csi-node.sock"
-            - "--kubelet-registration-path=/var/lib/kubelet/plugins/{{.Release.Name }}/csi-node.sock"
+            - "--csi-address=/csi/{{ .csiType }}-node.sock"
+            - "--kubelet-registration-path=/var/lib/kubelet/plugins/{{.Release.Name }}/{{ .csiType }}-node.sock"
           env:
             - name: KUBE_NODE_NAME
               valueFrom:
@@ -88,3 +94,4 @@ spec:
           hostPath:
             path: /dev
             type: Directory
+{{ end }}

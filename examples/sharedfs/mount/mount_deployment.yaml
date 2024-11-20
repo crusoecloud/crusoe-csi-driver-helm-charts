@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-mount-fs
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: example-mount-fs
+  template:
+    metadata:
+      labels:
+        app: example-mount-fs
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              app: example-mount-fs
+          whenUnsatisfiable: DoNotSchedule
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: example-mount-fs
+          image: ubuntu:24.04
+          command: ["sleep", "infinity"]
+          volumeMounts:
+            - mountPath: "/vol/myvolume"
+              name: myvolume
+      volumes:
+        - name: myvolume
+          persistentVolumeClaim:
+            claimName: sharedfs-mount
+            readOnly: false

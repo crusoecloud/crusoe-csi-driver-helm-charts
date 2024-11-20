@@ -2,11 +2,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mountpvc
+  name: ssd-mount
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: crusoe-csi-driver-sc
+  storageClassName: crusoe-csi-driver-ssd-sc
   resources:
     requests:
       storage: 15Gi

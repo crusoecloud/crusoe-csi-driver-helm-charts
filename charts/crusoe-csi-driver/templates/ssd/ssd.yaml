@@ -1,0 +1,8 @@
+{{ if $.Values.csi.ssd.enabled }}
+---
+{{ template "csiDriver" dict "Name" $.Values.csi.ssd.driverName }}
+---
+{{ template "controller" set $ "csiType" "ssd" }}
+---
+{{ template "node" set $ "csiType" "ssd" }}
+{{ end }}

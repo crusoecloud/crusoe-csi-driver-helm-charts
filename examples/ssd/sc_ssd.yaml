@@ -1,0 +1,7 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: crusoe-csi-driver-ssd-sc
+provisioner: ssd.csi.crusoe.ai
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
