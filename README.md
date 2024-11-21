@@ -13,12 +13,14 @@ Other configurations will be supported on a best-effort basis.
 
 ## Prerequisites
 
+The examples below assume the intended namespace
+for the CSI Driver is `crusoe-csi-driver`.
+
 ### Setting up credentials
 
 As the CSI Driver will communicate with the Crusoe Cloud API to orchestrate storage operations, you will have to set up
 credentials in your Kubernetes cluster which the driver can then use to communicate with the API. Here is a template `.yaml` file
-which can be modified with your credentials and applied to your cluster. The examples below assume the intended namespace
-for the CSI Driver is `crusoe-csi-driver`.
+which can be modified with your credentials and applied to your cluster.
 
 ```yaml
 apiVersion: v1
@@ -58,9 +60,9 @@ the latest versions of the packages.  You can then run `helm search repo
 ## Installation
 
 
-To install the Crusoe CSI Driver chart:
+To install the Crusoe CSI Driver chart in the `crusoe-csi-driver` namespace:
 
-    helm install <chart alias> <repo alias>/crusoe-csi-driver
+    helm install <chart alias> <repo alias>/crusoe-csi-driver -n crusoe-csi-driver
 
 To uninstall the chart:
 
@@ -69,6 +71,27 @@ To uninstall the chart:
 ## Customization
 
 The name of the secret containing the access and secret keys can be changed by modifying the `secrets.crusoeApiKeys.secretName` value.
+
+The persistent disk and shared filesystem drivers operate independently, and can be enabled or disabled by modifying the `csi.ssd.enabled` and `csi.fs.enabled` values.
+
+## Usage
+
+See the [examples](examples) directory for persistent disk and shared filesystem volume examples.
+
+## Feature Matrix
+
+| Feature               | Persistent Disk (SSD) | Shared Filesystem (FS)                                                             |
+|-----------------------|-----------------------|------------------------------------------------------------------------------------|
+| Access Modes          | ReadWriteOnce         | ReadWriteOnce, ReadWriteMany                                                       |
+| Volume Modes          | Block, Filesystem     | Filesystem                                                                         |
+| Volume Expansion      | Offline               | Offline, Online                                                                    |
+| Instance Type Support | All instance types    | All `c1a` and `s1a` instance types, [full GPU instance types](#full-gpu-instances) |
+
+#### Full GPU Instance Types
+
+Shared Filesystems are generally supported on the largest instance type in a family for GPU enabled instance types. For most GPU instance types, the largest instance type is the `*.8x` type.
+
+For `l40s-48gb` instances, the largest instance type is the `l40s-48gb.10x` type. Shared Filesystems are not supported on `l40s-48gb.8x` types.
 
 ## Non-CMK Deployments
 
