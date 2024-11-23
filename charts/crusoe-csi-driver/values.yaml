@@ -22,7 +22,7 @@ controller:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.0.14"
+      tag: "v0.1.0"
       imagePullSecrets:
         - name: registry-credentials
       imagePullPolicy: IfNotPresent
@@ -36,21 +36,21 @@ controller:
   attacher:
     image:
       repository: registry.k8s.io/sig-storage/csi-attacher
-      tag: "v4.7.0"
+      tag: "v0.1.0"
   provisioner:
     image:
       repository: registry.k8s.io/sig-storage/csi-provisioner
-      tag: "v5.1.0"
+      tag: "v0.1.0"
   resizer:
     image:
       repository: registry.k8s.io/sig-storage/csi-resizer
-      tag: "v1.12.0"
+      tag: "v0.1.0"
 
 node:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.0.14"
+      tag: "v0.1.0"
       imagePullSecrets:
         - name: registry-credentials
       imagePullPolicy: IfNotPresent
@@ -64,4 +64,4 @@ node:
   driverRegistrar:
     image:
       repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
-      tag: "v2.12.0"
+      tag: "v0.1.0"
