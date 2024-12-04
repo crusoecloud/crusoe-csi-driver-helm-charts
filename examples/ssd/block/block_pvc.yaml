@@ -9,5 +9,5 @@ spec:
   storageClassName: crusoe-csi-driver-ssd-sc
   resources:
     requests:
-      storage: 10Gi
+      storage: 2Gi
   volumeMode: Block
