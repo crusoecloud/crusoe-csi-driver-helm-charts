@@ -33,10 +33,10 @@ if [[ "$NO_MERGE" -ne "1" ]]; then
     # Update current branch
     git fetch -p && git pull
     # Create branch
-    git branch $BRANCH_NAME
+    git branch "$BRANCH_NAME"
 fi
 
-git checkout $BRANCH_NAME
+git checkout "$BRANCH_NAME"
 
 CUR_APP_VERSION=$(yq e '.appVersion' charts/crusoe-csi-driver/Chart.yaml)
 if [[ "$VERSION" == "$CUR_APP_VERSION" ]]; then
@@ -45,7 +45,7 @@ if [[ "$VERSION" == "$CUR_APP_VERSION" ]]; then
 fi
 
 # Check for major version change
-CUR_APP_MAJOR=$(echo $CUR_APP_VERSION | cut -d. -f1)
+CUR_APP_MAJOR=$(echo "$CUR_APP_VERSION" | cut -d. -f1)
 if [[ ! "$VERSION" =~ ^${CUR_APP_MAJOR}\.[0-9]+\.[0-9]+$ ]]; then
     printf '\n\e[1;31m%s\e[0m\n' "ERROR: App version ${VERSION} has different major version than current app version in chart: ${CUR_APP_VERSION}, manual upgrade is required"
     exit 1
@@ -53,11 +53,11 @@ fi
 
 # Check for minor version change
 CUR_CHART_VERSION=$(yq e '.version' charts/crusoe-csi-driver/Chart.yaml)
-CUR_APP_MINOR=$(echo $CUR_APP_VERSION | cut -d. -f2)
-CUR_CHART_MINOR=$(echo $CUR_CHART_VERSION | cut -d. -f2)
-NEW_APP_MINOR=$(echo $VERSION | cut -d. -f2)
+CUR_APP_MINOR=$(echo "$CUR_APP_VERSION" | cut -d. -f2)
+CUR_CHART_MINOR=$(echo "$CUR_CHART_VERSION" | cut -d. -f2)
+NEW_APP_MINOR=$(echo "$VERSION" | cut -d. -f2)
 NEW_CHART_MINOR=$CUR_CHART_MINOR
-CUR_CHART_PATCH=$(echo $CUR_CHART_VERSION | cut -d. -f3)
+CUR_CHART_PATCH=$(echo "$CUR_CHART_VERSION" | cut -d. -f3)
 NEW_CHART_PATCH=$((CUR_CHART_PATCH+1))
 if [[ "$NEW_APP_MINOR" -lt "$CUR_APP_MINOR" ]]; then
     printf '\n\e[1;31m%s\e[0m\n' "ERROR: App version ${VERSION} has lower minor version than current app version in chart: ${CUR_APP_VERSION}, downgrades are not allowed"
@@ -69,11 +69,11 @@ elif [[ "$NEW_APP_MINOR" -ne "$CUR_APP_MINOR" ]]; then
 fi
 
 # Update chart
-CUR_CHART_MAJOR=$(echo $CUR_CHART_VERSION | cut -d. -f1)
+CUR_CHART_MAJOR=$(echo "$CUR_CHART_VERSION" | cut -d. -f1)
 NEW_CHART_VERSION="${CUR_CHART_MAJOR}.${NEW_CHART_MINOR}.${NEW_CHART_PATCH}"
 sed -E -e "s/appVersion: \"${CUR_APP_VERSION}\"/appVersion: \"${VERSION}\"/g" -i "" charts/crusoe-csi-driver/Chart.yaml
 sed -E -e "s/version: ${CUR_CHART_VERSION}/version: ${NEW_CHART_VERSION}/g" -i "" charts/crusoe-csi-driver/Chart.yaml
-sed -E -e "s/tag: \".*\"/tag: \"${VERSION}\"/g" -i "" charts/crusoe-csi-driver/values.yaml
+sed -E -e "s/tag: \"${CUR_APP_VERSION}\"/tag: \"${VERSION}\"/g" -i "" charts/crusoe-csi-driver/values.yaml
 
 # Create MR
 MR_DESC="**Release version ${VERSION}**<br><br>"
