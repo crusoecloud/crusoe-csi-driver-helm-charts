@@ -38,10 +38,16 @@ spec:
             - name: CRUSOE_PROJECT_ID
               value: {{ . }}
             {{- end }}
-          envFrom:
-            - secretRef:
-                name: {{.Values.crusoe.secrets.crusoeApiKeys.secretName}}
-                optional: false
+            - name: CRUSOE_CSI_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.crusoe.secrets.crusoeApiKeys.secretName}}
+                  key: {{.Values.crusoe.secrets.crusoeApiKeys.accessKeyPath}}
+            - name: CRUSOE_CSI_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.crusoe.secrets.crusoeApiKeys.secretName}}
+                  key: {{.Values.crusoe.secrets.crusoeApiKeys.secretKeyPath}}
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -62,6 +68,7 @@ spec:
             - "--v=5"
             - "--csi-address=/csi/{{ .csiType }}-node.sock"
             - "--kubelet-registration-path=/var/lib/kubelet/plugins/{{.Release.Name }}/{{ .csiType }}-node.sock"
+            - "--http-endpoint=0.0.0.0:8081"
           env:
             - name: KUBE_NODE_NAME
               valueFrom:

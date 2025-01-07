@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ssd-rom
+spec:
+  accessModes:
+    - ReadOnlyMany
+  storageClassName: crusoe-csi-driver-ssd-sc
+  resources:
+    requests:
+      storage: 15Gi
+  volumeMode: Block

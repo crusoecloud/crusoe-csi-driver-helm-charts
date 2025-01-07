@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-rom-ssd
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: example-rom-ssd
+  template:
+    metadata:
+      labels:
+        app: example-rom-ssd
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              app: example-rom-ssd
+          whenUnsatisfiable: DoNotSchedule
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: example-rom-ssd
+          image: ubuntu:24.04
+          command: ["sleep", "infinity"]
+          volumeDevices:
+            - devicePath: "/dev/xvda"
+              name: myblockdevice
+      volumes:
+        - name: myblockdevice
+          persistentVolumeClaim:
+            claimName: ssd-rom
+            readOnly: false

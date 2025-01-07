@@ -42,7 +42,8 @@ kubectl create secret generic crusoe-api-keys -n crusoe-csi-driver -o yaml \
 ```
 
 By default, the driver will use the `crusoe-api-keys` secret.
-The name of the secret may be changed in the `secrets` section of the `values.yaml` file.
+The name of the secret as well as the name of the Secret keys that contain the access and secret keys
+may be changed in the `secrets` section of the `values.yaml` file.
 
 ### Helm
 
@@ -91,9 +92,9 @@ See the [examples](examples) directory for persistent disk and shared filesystem
 
 Shared Filesystems are generally supported on the largest instance type in a family for GPU enabled instance types. For most GPU instance types, the largest instance type is the `*.8x` type.
 
-For `l40s-48gb` instances, the largest instance type is the `l40s-48gb.10x` type. Shared Filesystems are not supported on `l40s-48gb.8x` types.
+For `l40s-48gb` instances, the largest instance type is the `l40s-48gb.10x` type. Shared Filesystems are not supported on `l40s-48gb.8x` types or smaller.
 
 ## Non-CMK Deployments
 
 If you are deploying on a self-managed Kubernetes cluster, it is **strongly recommended** that you change the `crusoe.projectID` value to the Crusoe project ID
-that contains your node VMs. **The Crusoe CSI Driver requires that the names of the Kubernetes node objects match the name of the VM they are deployed on in Crusoe Cloud**.
+that contains your node VMs.

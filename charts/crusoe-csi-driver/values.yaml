@@ -14,17 +14,18 @@ crusoe:
   secrets:
     crusoeApiKeys:
       # The Crusoe CSI Driver requires access to the Crusoe API in order to manage and mount Crusoe Storage Disks.
-      # It is expected that the secret will contain two keys: CRUSOE_CSI_ACCESS_KEY and CRUSOE_CSI_SECRET_KEY containing
+      # It is expected that the secret will contain two keys at accessKeyPath and secretKeyPath containing
       # the base64 encoded access key and secret key respectively.
       secretName: "crusoe-api-keys"
+      accessKeyPath: "CRUSOE_CSI_ACCESS_KEY"
+      secretKeyPath: "CRUSOE_CSI_SECRET_KEY"
 
 controller:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.1.3"
-      imagePullSecrets:
-        - name: registry-credentials
+      tag: "v0.1.5"
+      imagePullSecrets: []
       imagePullPolicy: IfNotPresent
     resources:
       requests:
@@ -50,9 +51,8 @@ node:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.1.3"
-      imagePullSecrets:
-        - name: registry-credentials
+      tag: "v0.1.5"
+      imagePullSecrets: []
       imagePullPolicy: IfNotPresent
     resources:
       requests:

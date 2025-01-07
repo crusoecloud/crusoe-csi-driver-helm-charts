@@ -39,10 +39,16 @@ spec:
             - name: CRUSOE_PROJECT_ID
               value: {{ . }}
             {{- end }}
-          envFrom:
-            - secretRef:
-                name: {{.Values.crusoe.secrets.crusoeApiKeys.secretName}}
-                optional: false
+            - name: CRUSOE_CSI_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.crusoe.secrets.crusoeApiKeys.secretName}}
+                  key: {{.Values.crusoe.secrets.crusoeApiKeys.accessKeyPath}}
+            - name: CRUSOE_CSI_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{.Values.crusoe.secrets.crusoeApiKeys.secretName}}
+                  key: {{.Values.crusoe.secrets.crusoeApiKeys.secretKeyPath}}
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -60,6 +66,8 @@ spec:
           args:
             - "--v=5"
             - "--csi-address=/csi/{{ .csiType }}-controller.sock"
+            - "--http-endpoint=0.0.0.0:8081"
+            - "--metrics-path=/metrics"
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -72,6 +80,8 @@ spec:
             - "--extra-create-metadata"
             - "--default-fstype=ext4"
             - "--controller-publish-readonly=true"
+            - "--http-endpoint=0.0.0.0:8082"
+            - "--metrics-path=/metrics"
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -81,6 +91,8 @@ spec:
             - "--v=5"
             - "--csi-address=/csi/{{ .csiType }}-controller.sock"
             - "--handle-volume-inuse-error=true"
+            - "--http-endpoint=0.0.0.0:8083"
+            - "--metrics-path=/metrics"
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
