@@ -3,7 +3,6 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: csi-attacher-role-cfg
-  namespace: {{ .Release.Namespace }}
 subjects:
   - kind: ServiceAccount
     name: {{ include "crusoe-csi-driver.fullname" . }}-controller-sa

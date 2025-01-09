@@ -2,4 +2,3 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ include "crusoe-csi-driver.fullname" . }}-node-sa
-  namespace: {{ .Release.Namespace }}
