@@ -1,19 +1,19 @@
 
-{{- range $index, $csi := .Values.csi }}
+{{- range $csiType, $csi := .Values.csi }}
 {{ if $csi.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}-controller
+  name: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csiType }}-controller
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}
+      app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csiType }}
   template:
     metadata:
       labels:
-        app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}
+        app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csiType }}
     spec:
       serviceAccountName: {{ include "crusoe-csi-driver.fullname" $ }}-controller
       {{- with $.Values.controller.crusoeCsiDriver.image.imagePullSecrets }}
@@ -25,9 +25,9 @@ spec:
           image: "{{ $.Values.controller.crusoeCsiDriver.image.repository }}:{{ $.Values.controller.crusoeCsiDriver.image.tag }}"
           imagePullPolicy: {{ $.Values.controller.crusoeCsiDriver.image.imagePullPolicy }}
           args:
-            - "--crusoe-csi-driver-type={{ $csi.csiType }}"
+            - "--crusoe-csi-driver-type={{ $csiType }}"
             - "--services=controller,identity"
-            - "--socket-address=unix:/csi/{{ $csi.csiType }}-controller.sock"
+            - "--socket-address=unix:/csi/{{ $csiType }}-controller.sock"
           env:
             - name: POD_NAME
               valueFrom:
@@ -67,7 +67,7 @@ spec:
           image: "{{ $.Values.controller.attacher.image.repository }}:{{ $.Values.controller.attacher.image.tag }}"
           args:
             - "--v=5"
-            - "--csi-address=/csi/{{ $csi.csiType }}-controller.sock"
+            - "--csi-address=/csi/{{ $csiType }}-controller.sock"
             - "--http-endpoint=0.0.0.0:8081"
             - "--metrics-path=/metrics"
           volumeMounts:
@@ -77,7 +77,7 @@ spec:
           image: "{{ $.Values.controller.provisioner.image.repository }}:{{ $.Values.controller.provisioner.image.tag }}"
           args:
             - "--v=5"
-            - "--csi-address=/csi/{{ $csi.csiType }}-controller.sock"
+            - "--csi-address=/csi/{{ $csiType }}-controller.sock"
             - "--feature-gates=Topology=true"
             - "--extra-create-metadata"
             - "--default-fstype=ext4"
@@ -91,7 +91,7 @@ spec:
           image: "{{ $.Values.controller.resizer.image.repository }}:{{ $.Values.controller.resizer.image.tag }}"
           args:
             - "--v=5"
-            - "--csi-address=/csi/{{ $csi.csiType }}-controller.sock"
+            - "--csi-address=/csi/{{ $csiType }}-controller.sock"
             - "--handle-volume-inuse-error=true"
             - "--http-endpoint=0.0.0.0:8083"
             - "--metrics-path=/metrics"

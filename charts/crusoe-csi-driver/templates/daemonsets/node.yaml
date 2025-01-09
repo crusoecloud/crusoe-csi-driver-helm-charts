@@ -1,17 +1,17 @@
-{{- range $index, $csi := .Values.csi }}
+{{- range $csiType, $csi := .Values.csi }}
 {{ if $csi.enabled }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}-node
+  name: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csiType }}-node
 spec:
   selector:
     matchLabels:
-      app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}
+      app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csiType }}
   template:
     metadata:
       labels:
-        app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}
+        app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csiType }}
     spec:
       serviceAccountName: {{ include "crusoe-csi-driver.fullname" $ }}-node
       {{- with $.Values.node.crusoeCsiDriver.image.imagePullSecrets }}
@@ -23,9 +23,9 @@ spec:
           image: "{{ $.Values.node.crusoeCsiDriver.image.repository }}:{{ $.Values.node.crusoeCsiDriver.image.tag }}"
           imagePullPolicy: {{ $.Values.node.crusoeCsiDriver.image.imagePullPolicy }}
           args:
-            - "--crusoe-csi-driver-type={{ $csi.csiType }}"
+            - "--crusoe-csi-driver-type={{ $csiType }}"
             - "--services=node,identity"
-            - "--socket-address=unix:/csi/{{ $csi.csiType }}-node.sock"
+            - "--socket-address=unix:/csi/{{ $csiType }}-node.sock"
           env:
             - name: POD_NAME
               valueFrom:
@@ -67,8 +67,8 @@ spec:
           image: "{{ $.Values.node.driverRegistrar.image.repository }}:{{ $.Values.node.driverRegistrar.image.tag }}"
           args:
             - "--v=5"
-            - "--csi-address=/csi/{{ $csi.csiType }}-node.sock"
-            - "--kubelet-registration-path=/var/lib/kubelet/plugins/{{ include "crusoe-csi-driver.fullname" $ }}/{{ $csi.csiType }}-node.sock"
+            - "--csi-address=/csi/{{ $csiType }}-node.sock"
+            - "--kubelet-registration-path=/var/lib/kubelet/plugins/{{ include "crusoe-csi-driver.fullname" $ }}/{{ $csiType }}-node.sock"
             - "--http-endpoint=0.0.0.0:8081"
           env:
             - name: KUBE_NODE_NAME
