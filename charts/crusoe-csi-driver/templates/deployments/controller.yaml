@@ -1,6 +1,6 @@
-
-{{- range $csiType, $csi := .Values.csi }}
+{{ range $csiType, $csi := .Values.csi }}
 {{ if $csi.enabled }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

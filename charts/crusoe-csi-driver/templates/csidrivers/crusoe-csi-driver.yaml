@@ -1,5 +1,6 @@
-{{- range $csiType, $csi := .Values.csi }}
+{{ range $csiType, $csi := .Values.csi }}
 {{ if $csi.enabled }}
+---
 apiVersion: storage.k8s.io/v1
 kind: CSIDriver
 metadata:
