@@ -5,7 +5,7 @@ metadata:
   name: csi-resizer-role
 subjects:
   - kind: ServiceAccount
-    name: {{ .Release.Name }}-controller-sa
+    name: {{ include "crusoe-csi-driver.fullname" . }}-controller-sa
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole

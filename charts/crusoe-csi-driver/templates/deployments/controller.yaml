@@ -4,18 +4,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ $.Release.Name }}-{{ $csi.csiType }}-controller
+  name: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}-controller
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ $.Release.Name }}-{{ $csi.csiType }}
+      app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}
   template:
     metadata:
       labels:
-        app: {{ $.Release.Name }}-{{ $csi.csiType }}
+        app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}
     spec:
-      serviceAccountName: {{ $.Release.Name }}-controller-sa
+      serviceAccountName: {{ include "crusoe-csi-driver.fullname" $ }}-controller-sa
       {{- with $.Values.controller.crusoeCsiDriver.image.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -102,7 +102,7 @@ spec:
         # This volume is where the socket for kubelet->driver communication is done
         - name: socket-dir
           hostPath:
-            path: /var/lib/kubelet/plugins/{{ $.Release.Name }}
+            path: /var/lib/kubelet/plugins/{{ include "crusoe-csi-driver.fullname" $ }}
             type: DirectoryOrCreate
           # This volume is where the driver mounts volumes
         - name: mountpoint-dir

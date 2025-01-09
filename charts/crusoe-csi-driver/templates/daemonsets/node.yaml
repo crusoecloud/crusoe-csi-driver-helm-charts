@@ -3,17 +3,17 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{$.Release.Name }}-{{ $csi.csiType }}-node
+  name: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}-node
 spec:
   selector:
     matchLabels:
-      app: {{$.Release.Name }}-{{ $csi.csiType }}
+      app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}
   template:
     metadata:
       labels:
-        app: {{$.Release.Name }}-{{ $csi.csiType }}
+        app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}
     spec:
-      serviceAccountName: {{ $.Release.Name }}-node-sa
+      serviceAccountName: {{ include "crusoe-csi-driver.fullname" $ }}-node-sa
       {{- with $.Values.node.crusoeCsiDriver.image.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -68,7 +68,7 @@ spec:
           args:
             - "--v=5"
             - "--csi-address=/csi/{{ $csi.csiType }}-node.sock"
-            - "--kubelet-registration-path=/var/lib/kubelet/plugins/{{$.Release.Name }}/{{ $csi.csiType }}-node.sock"
+            - "--kubelet-registration-path=/var/lib/kubelet/plugins/{{ include "crusoe-csi-driver.fullname" $ }}/{{ $csi.csiType }}-node.sock"
             - "--http-endpoint=0.0.0.0:8081"
           env:
             - name: KUBE_NODE_NAME
@@ -84,7 +84,7 @@ spec:
         # This volume is where the socket for kubelet->driver communication is done
         - name: socket-dir
           hostPath:
-            path: /var/lib/kubelet/plugins/{{$.Release.Name }}
+            path: /var/lib/kubelet/plugins/{{ include "crusoe-csi-driver.fullname" $ }}
             type: DirectoryOrCreate
           # This volume is where the driver mounts volumes
         - name: mountpoint-dir

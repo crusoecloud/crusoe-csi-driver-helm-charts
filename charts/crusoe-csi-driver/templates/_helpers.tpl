@@ -47,7 +47,7 @@ Selector labels
 */}}
 {{- define "crusoe-csi-driver.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "crusoe-csi-driver.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/instance: {{ include "crusoe-csi-driver.fullname" . }}
 {{- end }}
 
 {{/*
