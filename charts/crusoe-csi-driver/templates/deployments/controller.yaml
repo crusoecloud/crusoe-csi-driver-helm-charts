@@ -1,31 +1,33 @@
-{{ define "controller" }}
+
+{{- range $index, $csi := .Values.csi }}
+{{ if $csi.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{.Release.Name }}-{{ .csiType }}-controller
+  name: {{ $.Release.Name }}-{{ $csi.csiType }}-controller
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{.Release.Name }}-{{ .csiType }}
+      app: {{ $.Release.Name }}-{{ $csi.csiType }}
   template:
     metadata:
       labels:
-        app: {{.Release.Name }}-{{ .csiType }}
+        app: {{ $.Release.Name }}-{{ $csi.csiType }}
     spec:
-      serviceAccountName: {{ .Release.Name }}-controller-sa
-      {{- with .Values.controller.crusoeCsiDriver.image.imagePullSecrets }}
+      serviceAccountName: {{ $.Release.Name }}-controller-sa
+      {{- with $.Values.controller.crusoeCsiDriver.image.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
         - name: crusoe-csi-driver
-          image: "{{ .Values.controller.crusoeCsiDriver.image.repository }}:{{ .Values.controller.crusoeCsiDriver.image.tag }}"
-          imagePullPolicy: {{ .Values.controller.crusoeCsiDriver.image.imagePullPolicy }}
+          image: "{{ $.Values.controller.crusoeCsiDriver.image.repository }}:{{ $.Values.controller.crusoeCsiDriver.image.tag }}"
+          imagePullPolicy: {{ $.Values.controller.crusoeCsiDriver.image.imagePullPolicy }}
           args:
-            - "--crusoe-csi-driver-type={{ .csiType }}"
+            - "--crusoe-csi-driver-type={{ $csi.csiType }}"
             - "--services=controller,identity"
-            - "--socket-address=unix:/csi/{{ .csiType }}-controller.sock"
+            - "--socket-address=unix:/csi/{{ $csi.csiType }}-controller.sock"
           env:
             - name: POD_NAME
               valueFrom:
@@ -35,20 +37,20 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            {{- with .Values.crusoe.projectID }}
+            {{- with $.Values.crusoe.projectID }}
             - name: CRUSOE_PROJECT_ID
               value: {{ . }}
             {{- end }}
             - name: CRUSOE_CSI_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{.Values.crusoe.secrets.crusoeApiKeys.secretName}}
-                  key: {{.Values.crusoe.secrets.crusoeApiKeys.accessKeyPath}}
+                  name: {{$.Values.crusoe.secrets.crusoeApiKeys.secretName}}
+                  key: {{$.Values.crusoe.secrets.crusoeApiKeys.accessKeyPath}}
             - name: CRUSOE_CSI_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{.Values.crusoe.secrets.crusoeApiKeys.secretName}}
-                  key: {{.Values.crusoe.secrets.crusoeApiKeys.secretKeyPath}}
+                  name: {{$.Values.crusoe.secrets.crusoeApiKeys.secretName}}
+                  key: {{$.Values.crusoe.secrets.crusoeApiKeys.secretKeyPath}}
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -57,25 +59,25 @@ spec:
               mountPropagation: "Bidirectional"
           securityContext:
             privileged: true
-          {{- with .Values.controller.crusoeCsiDriver.resources }}
+          {{- with $.Values.controller.crusoeCsiDriver.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         - name: csi-attacher
-          image: "{{ .Values.controller.attacher.image.repository }}:{{ .Values.controller.attacher.image.tag }}"
+          image: "{{ $.Values.controller.attacher.image.repository }}:{{ $.Values.controller.attacher.image.tag }}"
           args:
             - "--v=5"
-            - "--csi-address=/csi/{{ .csiType }}-controller.sock"
+            - "--csi-address=/csi/{{ $csi.csiType }}-controller.sock"
             - "--http-endpoint=0.0.0.0:8081"
             - "--metrics-path=/metrics"
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
         - name: csi-provisioner
-          image: "{{ .Values.controller.provisioner.image.repository }}:{{ .Values.controller.provisioner.image.tag }}"
+          image: "{{ $.Values.controller.provisioner.image.repository }}:{{ $.Values.controller.provisioner.image.tag }}"
           args:
             - "--v=5"
-            - "--csi-address=/csi/{{ .csiType }}-controller.sock"
+            - "--csi-address=/csi/{{ $csi.csiType }}-controller.sock"
             - "--feature-gates=Topology=true"
             - "--extra-create-metadata"
             - "--default-fstype=ext4"
@@ -86,10 +88,10 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-resizer
-          image: "{{ .Values.controller.resizer.image.repository }}:{{ .Values.controller.resizer.image.tag }}"
+          image: "{{ $.Values.controller.resizer.image.repository }}:{{ $.Values.controller.resizer.image.tag }}"
           args:
             - "--v=5"
-            - "--csi-address=/csi/{{ .csiType }}-controller.sock"
+            - "--csi-address=/csi/{{ $csi.csiType }}-controller.sock"
             - "--handle-volume-inuse-error=true"
             - "--http-endpoint=0.0.0.0:8083"
             - "--metrics-path=/metrics"
@@ -100,11 +102,12 @@ spec:
         # This volume is where the socket for kubelet->driver communication is done
         - name: socket-dir
           hostPath:
-            path: /var/lib/kubelet/plugins/{{.Release.Name }}
+            path: /var/lib/kubelet/plugins/{{ $.Release.Name }}
             type: DirectoryOrCreate
           # This volume is where the driver mounts volumes
         - name: mountpoint-dir
           hostPath:
             path: /var/lib/kubelet
             type: Directory
+{{ end }}
 {{ end }}

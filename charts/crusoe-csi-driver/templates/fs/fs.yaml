@@ -1,8 +1,0 @@
-{{ if $.Values.csi.fs.enabled }}
----
-{{ template "csiDriver" dict "Name" $.Values.csi.fs.driverName }}
----
-{{ template "controller" set $ "csiType" "fs" }}
----
-{{ template "node" set $ "csiType" "fs" }}
-{{ end }}

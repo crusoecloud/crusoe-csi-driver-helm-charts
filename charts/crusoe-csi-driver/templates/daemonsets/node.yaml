@@ -1,30 +1,31 @@
-{{ define "node" }}
+{{- range $index, $csi := .Values.csi }}
+{{ if $csi.enabled }}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: {{.Release.Name }}-{{ .csiType }}-node
+  name: {{$.Release.Name }}-{{ $csi.csiType }}-node
 spec:
   selector:
     matchLabels:
-      app: {{.Release.Name }}-{{ .csiType }}
+      app: {{$.Release.Name }}-{{ $csi.csiType }}
   template:
     metadata:
       labels:
-        app: {{.Release.Name }}-{{ .csiType }}
+        app: {{$.Release.Name }}-{{ $csi.csiType }}
     spec:
-      serviceAccountName: {{ .Release.Name }}-node-sa
-      {{- with .Values.node.crusoeCsiDriver.image.imagePullSecrets }}
+      serviceAccountName: {{ $.Release.Name }}-node-sa
+      {{- with $.Values.node.crusoeCsiDriver.image.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
         - name: crusoe-csi-driver
-          image: "{{ .Values.node.crusoeCsiDriver.image.repository }}:{{ .Values.node.crusoeCsiDriver.image.tag }}"
-          imagePullPolicy: {{ .Values.node.crusoeCsiDriver.image.imagePullPolicy }}
+          image: "{{ $.Values.node.crusoeCsiDriver.image.repository }}:{{ $.Values.node.crusoeCsiDriver.image.tag }}"
+          imagePullPolicy: {{ $.Values.node.crusoeCsiDriver.image.imagePullPolicy }}
           args:
-            - "--crusoe-csi-driver-type={{ .csiType }}"
+            - "--crusoe-csi-driver-type={{ $csi.csiType }}"
             - "--services=node,identity"
-            - "--socket-address=unix:/csi/{{ .csiType }}-node.sock"
+            - "--socket-address=unix:/csi/{{ $csi.csiType }}-node.sock"
           env:
             - name: POD_NAME
               valueFrom:
@@ -34,20 +35,20 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            {{- with .Values.crusoe.projectID }}
+            {{- with $.Values.crusoe.projectID }}
             - name: CRUSOE_PROJECT_ID
               value: {{ . }}
             {{- end }}
             - name: CRUSOE_CSI_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{.Values.crusoe.secrets.crusoeApiKeys.secretName}}
-                  key: {{.Values.crusoe.secrets.crusoeApiKeys.accessKeyPath}}
+                  name: {{$.Values.crusoe.secrets.crusoeApiKeys.secretName}}
+                  key: {{$.Values.crusoe.secrets.crusoeApiKeys.accessKeyPath}}
             - name: CRUSOE_CSI_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{.Values.crusoe.secrets.crusoeApiKeys.secretName}}
-                  key: {{.Values.crusoe.secrets.crusoeApiKeys.secretKeyPath}}
+                  name: {{$.Values.crusoe.secrets.crusoeApiKeys.secretName}}
+                  key: {{$.Values.crusoe.secrets.crusoeApiKeys.secretKeyPath}}
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -58,16 +59,16 @@ spec:
               mountPath: /dev
           securityContext:
             privileged: true
-          {{- with .Values.node.crusoeCsiDriver.resources }}
+          {{- with $.Values.node.crusoeCsiDriver.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         - name: csi-driver-registrar
-          image: "{{ .Values.node.driverRegistrar.image.repository }}:{{ .Values.node.driverRegistrar.image.tag }}"
+          image: "{{ $.Values.node.driverRegistrar.image.repository }}:{{ $.Values.node.driverRegistrar.image.tag }}"
           args:
             - "--v=5"
-            - "--csi-address=/csi/{{ .csiType }}-node.sock"
-            - "--kubelet-registration-path=/var/lib/kubelet/plugins/{{.Release.Name }}/{{ .csiType }}-node.sock"
+            - "--csi-address=/csi/{{ $csi.csiType }}-node.sock"
+            - "--kubelet-registration-path=/var/lib/kubelet/plugins/{{$.Release.Name }}/{{ $csi.csiType }}-node.sock"
             - "--http-endpoint=0.0.0.0:8081"
           env:
             - name: KUBE_NODE_NAME
@@ -83,7 +84,7 @@ spec:
         # This volume is where the socket for kubelet->driver communication is done
         - name: socket-dir
           hostPath:
-            path: /var/lib/kubelet/plugins/{{.Release.Name }}
+            path: /var/lib/kubelet/plugins/{{$.Release.Name }}
             type: DirectoryOrCreate
           # This volume is where the driver mounts volumes
         - name: mountpoint-dir
@@ -101,4 +102,5 @@ spec:
           hostPath:
             path: /dev
             type: Directory
+{{ end }}
 {{ end }}
