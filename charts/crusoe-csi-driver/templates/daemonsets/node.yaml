@@ -13,7 +13,7 @@ spec:
       labels:
         app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}
     spec:
-      serviceAccountName: {{ include "crusoe-csi-driver.fullname" $ }}-node-sa
+      serviceAccountName: {{ include "crusoe-csi-driver.fullname" $ }}-node
       {{- with $.Values.node.crusoeCsiDriver.image.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

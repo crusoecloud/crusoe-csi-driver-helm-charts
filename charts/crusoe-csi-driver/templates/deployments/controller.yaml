@@ -15,7 +15,7 @@ spec:
       labels:
         app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csi.csiType }}
     spec:
-      serviceAccountName: {{ include "crusoe-csi-driver.fullname" $ }}-controller-sa
+      serviceAccountName: {{ include "crusoe-csi-driver.fullname" $ }}-controller
       {{- with $.Values.controller.crusoeCsiDriver.image.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

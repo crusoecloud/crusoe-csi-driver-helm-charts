@@ -5,7 +5,7 @@ metadata:
   name: csi-provisioner-role-cfg
 subjects:
   - kind: ServiceAccount
-    name: {{ include "crusoe-csi-driver.fullname" . }}-controller-sa
+    name: {{ include "crusoe-csi-driver.fullname" . }}-controller
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role

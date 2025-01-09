@@ -5,7 +5,7 @@ metadata:
   name: {{ include "crusoe-csi-driver.fullname" . }}-node-read-labels
 subjects:
   - kind: ServiceAccount
-    name: {{ include "crusoe-csi-driver.fullname" . }}-node-sa
+    name: {{ include "crusoe-csi-driver.fullname" . }}-node
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
