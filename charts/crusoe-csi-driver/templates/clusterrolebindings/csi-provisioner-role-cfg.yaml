@@ -2,12 +2,12 @@
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-provisioner-role-cfg
+  name: {{ include "crusoe-csi-driver.fullname" . }}-csi-provisioner-role-cfg
 subjects:
   - kind: ServiceAccount
     name: {{ include "crusoe-csi-driver.fullname" . }}-controller
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
-  name: external-provisioner-cfg
+  name: {{ include "crusoe-csi-driver.fullname" . }}-external-provisioner-cfg
   apiGroup: rbac.authorization.k8s.io
