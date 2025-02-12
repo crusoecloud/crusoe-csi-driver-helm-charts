@@ -31,5 +31,6 @@ jobs:
         with:
           charts_dir: charts
           config: cr.yaml
+          mark_as_latest: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

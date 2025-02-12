@@ -36,6 +36,18 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            {{- if $.Values.crusoe.api }}
+            {{- with $.Values.crusoe.api.endpoint }}
+            - name: CRUSOE_API_ENDPOINT
+              value: {{ quote . }}
+            {{- else with $.Values.crusoe.api.fromSecret }}
+            - name: CRUSOE_API_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .name }}
+                  key: {{ .endpointKeyPath }}
+            {{- end }}
+            {{- end }}
             {{- with $.Values.crusoe.projectID }}
             - name: CRUSOE_PROJECT_ID
               value: {{ . }}
@@ -43,13 +55,13 @@ spec:
             - name: CRUSOE_CSI_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{$.Values.crusoe.secrets.crusoeApiKeys.secretName}}
-                  key: {{$.Values.crusoe.secrets.crusoeApiKeys.accessKeyPath}}
+                  name: {{ $.Values.crusoe.secrets.crusoeApiKeys.secretName }}
+                  key: {{ $.Values.crusoe.secrets.crusoeApiKeys.accessKeyPath }}
             - name: CRUSOE_CSI_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{$.Values.crusoe.secrets.crusoeApiKeys.secretName}}
-                  key: {{$.Values.crusoe.secrets.crusoeApiKeys.secretKeyPath}}
+                  name: {{ $.Values.crusoe.secrets.crusoeApiKeys.secretName }}
+                  key: {{ $.Values.crusoe.secrets.crusoeApiKeys.secretKeyPath }}
           volumeMounts:
             - name: socket-dir
               mountPath: /csi

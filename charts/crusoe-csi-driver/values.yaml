@@ -19,12 +19,19 @@ crusoe:
       secretName: "crusoe-api-keys"
       accessKeyPath: "CRUSOE_CSI_ACCESS_KEY"
       secretKeyPath: "CRUSOE_CSI_SECRET_KEY"
+  api:
+    # Specify the Crusoe API endpoint to use directly.
+    # Alternatively, the driver can read the endpoint from a secret
+    #endpoint: "https://api.crusoecloud.com/v1alpha5"
+    #fromSecret:
+    #  name: "crusoe-api-keys"
+    #  endpointKeyPath: "CRUSOE_API_ENDPOINT"
 
 controller:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.1.5"
+      tag: "v0.1.7"
       imagePullSecrets: []
       imagePullPolicy: IfNotPresent
     resources:
@@ -51,7 +58,7 @@ node:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.1.5"
+      tag: "v0.1.7"
       imagePullSecrets: []
       imagePullPolicy: IfNotPresent
     resources:

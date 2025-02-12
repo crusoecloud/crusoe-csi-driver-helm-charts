@@ -37,6 +37,18 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            {{- with $.Values.crusoe.api }}
+            {{- with .endpoint }}
+            - name: CRUSOE_API_ENDPOINT
+              value: {{ quote . }}
+            {{- else with .fromSecret }}
+            - name: CRUSOE_API_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .name }}
+                  key: {{ .endpointKeyPath }}
+            {{- end }}
+            {{- end }}
             {{- with $.Values.crusoe.projectID }}
             - name: CRUSOE_PROJECT_ID
               value: {{ . }}
