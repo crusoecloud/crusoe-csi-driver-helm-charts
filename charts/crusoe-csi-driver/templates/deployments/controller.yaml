@@ -41,12 +41,14 @@ spec:
             {{- with .endpoint }}
             - name: CRUSOE_API_ENDPOINT
               value: {{ quote . }}
-            {{- else with .fromSecret }}
+            {{- else }}
+            {{- if .fromSecret}}
             - name: CRUSOE_API_ENDPOINT
               valueFrom:
                 secretKeyRef:
-                  name: {{ .name }}
-                  key: {{ .endpointKeyPath }}
+                  name: {{ .fromSecret.name }}
+                  key: {{ .fromSecret.endpointKeyPath }}
+            {{- end }}
             {{- end }}
             {{- end }}
             {{- with $.Values.crusoe.projectID }}
