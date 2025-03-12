@@ -2,3 +2,4 @@
 pages-branch: gh-pages
 pages-index-path: charts/index.yaml
 skip-existing: true
+make-release-latest: true
