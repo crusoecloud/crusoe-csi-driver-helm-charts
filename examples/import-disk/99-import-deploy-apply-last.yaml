@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-import
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example-import
+  template:
+    metadata:
+      labels:
+        app: example-import
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: example-import
+          image: ubuntu:24.04
+          command: ["sleep", "infinity"]
+          volumeMounts:
+            - mountPath: "/vol/myvolume"
+              name: myvolume
+      volumes:
+        - name: myvolume
+          persistentVolumeClaim:
+            claimName: test-csi-import
+            readOnly: false

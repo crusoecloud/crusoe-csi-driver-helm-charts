@@ -1,0 +1,12 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-csi-import
+spec:
+  accessModes:
+    - ReadWriteOnce # Must match PV. See https://github.com/crusoecloud/crusoe-csi-driver-helm-charts#feature-matrix for supported access modes
+  storageClassName: <REPLACEME with Storage Class Name> # Must match PV and with existing disk - use appropriate storage class for volume type
+  resources:
+    requests:
+      storage: <REPLACEME with Crusoe Disk Size> # Must match PV and with existing disk
+  volumeMode: Filesystem # Must match PV. See https://github.com/crusoecloud/crusoe-csi-driver-helm-charts#feature-matrix for supported volume modes

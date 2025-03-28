@@ -28,11 +28,15 @@ crusoe:
     #  endpointKeyPath: "CRUSOE_API_ENDPOINT"
 
 controller:
+  affinity: { }
+  topologySpreadConstraints: [ ]
+  tolerations: [ ]
+  priorityClassName: "system-cluster-critical"
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
       tag: "v0.1.9"
-      imagePullSecrets: []
+      imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:
       requests:
@@ -55,11 +59,20 @@ controller:
       tag: "v1.12.0"
 
 node:
+  # Note that the node agent uses a DaemonSet
+  # Only NodeAffinity affinities will affect the scheduling of the node agent
+  # podAffinity, podAntiAffinity and topologySpreadConstraints will be ignored
+  affinity: { }
+  topologySpreadConstraints: [ ]
+  tolerations:
+    - operator: Exists
+      effect: NoSchedule
+  priorityClassName: "system-node-critical"
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
       tag: "v0.1.9"
-      imagePullSecrets: []
+      imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:
       requests:

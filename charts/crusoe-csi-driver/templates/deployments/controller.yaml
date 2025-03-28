@@ -20,6 +20,21 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with $.Values.controller.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.controller.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.controller.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- with $.Values.controller.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: crusoe-csi-driver
           image: "{{ $.Values.controller.crusoeCsiDriver.image.repository }}:{{ $.Values.controller.crusoeCsiDriver.image.tag }}"

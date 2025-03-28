@@ -1,0 +1,20 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: test-csi-import
+spec:
+  capacity:
+    storage: <REPLACEME with Crusoe Disk Size> # Must match PVC and with existing disk
+  accessModes:
+    - ReadWriteOnce # Must match PVC. See https://github.com/crusoecloud/crusoe-csi-driver-helm-charts#feature-matrix for supported access modes
+  storageClassName: <REPLACEME with Storage Class Name> # Must match PVC and with existing disk - use appropriate storage class for volume type
+  volumeMode: Filesystem # Must match PVC. See https://github.com/crusoecloud/crusoe-csi-driver-helm-charts#feature-matrix for supported volume modes
+  persistentVolumeReclaimPolicy: Retain # Retain is suggested for "imported" volumes to not delete the underlying volume when the PV(C) is deleted
+  csi:
+    driver: <EITHER ssd.csi.crusoe.ai or fs.csi.crusoe.ai>  # See storage class "provisioner" field
+    readOnly: <EITHER true or false> # Must match PVC (accessModes: - ReadOnlyMany --> readOnly: true, otherwise false)
+    volumeHandle: <REPLACEME with Crusoe Disk ID>  # Fetch with crusoe storage disks get <name>
+    volumeAttributes:
+      csi.crusoe.ai/disk-name: <REPLACEME with Crusoe Disk Name>  # Fetch from UI or crusoe storage disks list
+      csi.crusoe.ai/serial-number: <REPLACEME Crusoe Disk Serial Number>  # Fetch with crusoe storage disks get <name>
+
