@@ -29,6 +29,7 @@ crusoe:
 
 controller:
   affinity: { }
+  nodeSelector: { }
   topologySpreadConstraints: [ ]
   tolerations: [ ]
   priorityClassName: "system-cluster-critical"
