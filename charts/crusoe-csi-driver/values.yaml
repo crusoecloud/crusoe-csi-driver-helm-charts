@@ -28,6 +28,9 @@ crusoe:
     #  endpointKeyPath: "CRUSOE_API_ENDPOINT"
 
 controller:
+  # Extra configuration to add under the deployment spec
+  customSpec: { }
+  nodeSelector: { }
   affinity: { }
   topologySpreadConstraints: [ ]
   tolerations: [ ]
@@ -59,6 +62,9 @@ controller:
       tag: "v1.12.0"
 
 node:
+  # Extra configuration to add under the daemonset spec
+  customSpec: { }
+  nodeSelector: { }
   # Note that the node agent uses a DaemonSet
   # Only NodeAffinity affinities will affect the scheduling of the node agent
   # podAffinity, podAntiAffinity and topologySpreadConstraints will be ignored

@@ -19,6 +19,10 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with $.Values.node.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with $.Values.node.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -132,5 +136,8 @@ spec:
           hostPath:
             path: /dev
             type: Directory
+      {{- with $.Values.node.customSpec }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
 {{ end }}
 {{ end }}
