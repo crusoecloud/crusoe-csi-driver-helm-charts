@@ -106,7 +106,7 @@ spec:
             httpGet:
               path: /healthz
               port: 8084 # Using 8084 instead of 8082 to align with controller
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             timeoutSeconds: 2
             periodSeconds: 2
           {{- with $.Values.node.crusoeCsiDriver.resources }}
