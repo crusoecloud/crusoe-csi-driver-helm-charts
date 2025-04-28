@@ -60,6 +60,10 @@ controller:
     image:
       repository: registry.k8s.io/sig-storage/csi-resizer
       tag: "v1.12.0"
+  livenessProbe:
+    image:
+      repository: registry.k8s.io/sig-storage/livenessprobe
+      tag: "v2.15.0"
 
 node:
   # Extra configuration to add under the daemonset spec
@@ -91,3 +95,7 @@ node:
     image:
       repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
       tag: "v2.12.0"
+  livenessProbe:
+    image:
+      repository: registry.k8s.io/sig-storage/livenessprobe
+      tag: "v2.15.0"
