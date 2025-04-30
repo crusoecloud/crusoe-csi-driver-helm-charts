@@ -93,6 +93,22 @@ spec:
               mountPath: /dev
           securityContext:
             privileged: true
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /healthz
+              port: 8084 # Using 8084 instead of 8082 to align with controller
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 2
+          readinessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: /healthz
+              port: 8084 # Using 8084 instead of 8082 to align with controller
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+            periodSeconds: 2
           {{- with $.Values.node.crusoeCsiDriver.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -114,6 +130,16 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
+        - name: csi-liveness-probe
+          image: "{{ $.Values.node.livenessProbe.image.repository }}:{{ $.Values.controller.livenessProbe.image.tag }}"
+          args:
+            - "--v=5"
+            - "--csi-address=/csi/{{ $csiType }}-node.sock"
+            - "--http-endpoint=0.0.0.0:8084" # Using 8084 instead of 8082 to align with controller
+            - "--metrics-path=/metrics"
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
       volumes:
         # This volume is where the socket for kubelet->driver communication is done
         - name: socket-dir

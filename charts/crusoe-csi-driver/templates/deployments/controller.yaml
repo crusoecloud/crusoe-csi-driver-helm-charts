@@ -92,6 +92,22 @@ spec:
               mountPropagation: "Bidirectional"
           securityContext:
             privileged: true
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /healthz
+              port: 8084
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 2
+          readinessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: /healthz
+              port: 8084
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+            periodSeconds: 2
           {{- with $.Values.controller.crusoeCsiDriver.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -127,6 +143,16 @@ spec:
             - "--csi-address=/csi/{{ $csiType }}-controller.sock"
             - "--handle-volume-inuse-error=true"
             - "--http-endpoint=0.0.0.0:8083"
+            - "--metrics-path=/metrics"
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+        - name: csi-liveness-probe
+          image: "{{ $.Values.controller.livenessProbe.image.repository }}:{{ $.Values.controller.livenessProbe.image.tag }}"
+          args:
+            - "--v=5"
+            - "--csi-address=/csi/{{ $csiType }}-controller.sock"
+            - "--http-endpoint=0.0.0.0:8084"
             - "--metrics-path=/metrics"
           volumeMounts:
             - name: socket-dir
