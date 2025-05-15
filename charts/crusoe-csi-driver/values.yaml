@@ -38,7 +38,7 @@ controller:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.2.0"
+      tag: "v0.2.1"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:
@@ -51,15 +51,15 @@ controller:
   attacher:
     image:
       repository: registry.k8s.io/sig-storage/csi-attacher
-      tag: "v4.7.0"
+      tag: "v4.8.1"
   provisioner:
     image:
       repository: registry.k8s.io/sig-storage/csi-provisioner
-      tag: "v5.1.0"
+      tag: "v5.2.0"
   resizer:
     image:
       repository: registry.k8s.io/sig-storage/csi-resizer
-      tag: "v1.12.0"
+      tag: "v1.13.2"
   livenessProbe:
     image:
       repository: registry.k8s.io/sig-storage/livenessprobe
@@ -81,7 +81,7 @@ node:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.2.0"
+      tag: "v0.2.1"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:
@@ -94,7 +94,7 @@ node:
   driverRegistrar:
     image:
       repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
-      tag: "v2.12.0"
+      tag: "v2.13.0"
   livenessProbe:
     image:
       repository: registry.k8s.io/sig-storage/livenessprobe
