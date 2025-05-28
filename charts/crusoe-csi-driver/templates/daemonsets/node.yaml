@@ -73,12 +73,12 @@ spec:
             - name: CRUSOE_PROJECT_ID
               value: {{ . }}
             {{- end }}
-            - name: CRUSOE_CSI_ACCESS_KEY
+            - name: CRUSOE_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ $.Values.crusoe.secrets.crusoeApiKeys.secretName }}
                   key: {{ $.Values.crusoe.secrets.crusoeApiKeys.accessKeyPath }}
-            - name: CRUSOE_CSI_SECRET_KEY
+            - name: CRUSOE_SECRET_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ $.Values.crusoe.secrets.crusoeApiKeys.secretName }}
