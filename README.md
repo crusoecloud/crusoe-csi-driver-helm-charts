@@ -22,11 +22,13 @@ As the CSI Driver will communicate with the Crusoe Cloud API to orchestrate stor
 credentials in your Kubernetes cluster which the driver can then use to communicate with the API. Here is a template `.yaml` file
 which can be modified with your credentials and applied to your cluster.
 
+You can generate the API token in the Security → Tokens tab. These tokens allow you to manage cloud resources.
+
 ```yaml
 apiVersion: v1
 data:
-  CRUSOE_CSI_ACCESS_KEY: <base-64 encoded Crusoe Access Key>
-  CRUSOE_CSI_SECRET_KEY: <base-64 encoded Crusoe Secret Key>
+  CRUSOE_ACCESS_KEY: <base-64 encoded Crusoe Access Key>
+  CRUSOE_SECRET_KEY: <base-64 encoded Crusoe Secret Key>
 kind: Secret
 metadata:
   name: crusoe-api-keys
@@ -37,8 +39,8 @@ metadata:
 An appropriate secret can be created in your cluster by filling out the command below and running it in the terminal:
 ```shell
 kubectl create secret generic crusoe-api-keys -n crusoe-csi-driver -o yaml \
---from-literal=CRUSOE_CSI_ACCESS_KEY=$YOUR_CRUSOE_ACCESS_KEY \
---from-literal=CRUSOE_CSI_SECRET_KEY=$YOUR_CRUSOE_SECRET_KEY
+--from-literal=CRUSOE_ACCESS_KEY=$YOUR_CRUSOE_ACCESS_KEY \
+--from-literal=CRUSOE_SECRET_KEY=$YOUR_CRUSOE_SECRET_KEY
 ```
 
 By default, the driver will use the `crusoe-api-keys` secret.
