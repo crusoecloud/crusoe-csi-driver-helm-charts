@@ -11,6 +11,10 @@ This guide assumes that the user has already set up CMK on Crusoe Cloud.
 
 Other configurations will be supported on a best-effort basis.
 
+## Changelog
+
+Please refer to the [CHANGELOG](CHANGELOG.md) for breaking changes and upgrade instructions.
+
 ## Prerequisites
 
 The examples below assume the intended namespace
@@ -19,10 +23,10 @@ for the CSI Driver is `crusoe-csi-driver`.
 ### Setting up credentials
 
 As the CSI Driver will communicate with the Crusoe Cloud API to orchestrate storage operations, you will have to set up
-credentials in your Kubernetes cluster which the driver can then use to communicate with the API. Here is a template `.yaml` file
-which can be modified with your credentials and applied to your cluster.
+credentials in your Kubernetes cluster which the driver can then use to communicate with the API. You can generate an appropriate
+Crusoe API key pair in the Security → Tokens tab of the Cruosoe Cloud UI.
 
-You can generate the API token in the Security → Tokens tab. These tokens allow you to manage cloud resources.
+Here is a template `.yaml` file which can be modified with your credentials and applied to your cluster.
 
 ```yaml
 apiVersion: v1

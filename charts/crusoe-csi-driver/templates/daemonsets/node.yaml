@@ -14,6 +14,7 @@ spec:
       labels:
         app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csiType }}
     spec:
+      hostPID: true
       serviceAccountName: {{ include "crusoe-csi-driver.fullname" $ }}-node
       {{- with $.Values.node.crusoeCsiDriver.image.imagePullSecrets }}
       imagePullSecrets:
@@ -38,11 +39,60 @@ spec:
       {{- with $.Values.node.priorityClassName }}
       priorityClassName: {{ . }}
       {{- end }}
+      {{ if eq $csiType "fs" }}
+      initContainers:
+        - name: install-nfs-prerequisites
+          image: "{{ $.Values.node.installNfsPrerequisites.image.repository }}:{{ $.Values.node.installNfsPrerequisites.image.tag }}"
+          command:
+            - "/bin/sh"
+          args:
+            - "-c"
+            - |
+              cp /root/install.py /host/root/install.py
+              nsenter -t 1 -m -u -i -n -p bash -ex -c "
+              export DEBIAN_FRONTEND=noninteractive &&
+              PACKAGES_TO_INSTALL=() &&
+              command -v sudo >/dev/null 2>&1 || PACKAGES_TO_INSTALL+=(sudo) &&
+              command -v curl >/dev/null 2>&1 || PACKAGES_TO_INSTALL+=(curl) &&
+              command -v xz >/dev/null 2>&1 || PACKAGES_TO_INSTALL+=(xz-utils) &&
+              if [ \${#PACKAGES_TO_INSTALL[@]} -gt 0 ]; then
+                echo \"Installing missing utilities: \${PACKAGES_TO_INSTALL[*]}\" &&
+                apt-get update -y &&
+                apt-get install -y \${PACKAGES_TO_INSTALL[@]}
+              else
+                echo \"All utilities required for the installation process (sudo, curl, xz) are already installed\"
+              fi &&
+              mkdir -p /var/log/cmk &&
+              echo 'Running install script...' &&
+              /usr/bin/python3 -u /root/install.py -y | tee -a /var/log/cmk/install-nfs-prerequisites.log
+              "
+              exit $?
+          volumeMounts:
+            - name: install-script
+              mountPath: "/root"
+            - name: host-root
+              mountPath: "/host"
+          securityContext:
+            privileged: true
+          {{- with $.Values.node.installNfsPrerequisites.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- end }}
       containers:
         - name: crusoe-csi-driver
           image: "{{ $.Values.node.crusoeCsiDriver.image.repository }}:{{ $.Values.node.crusoeCsiDriver.image.tag }}"
           imagePullPolicy: {{ $.Values.node.crusoeCsiDriver.image.imagePullPolicy }}
+          command:
+            - nsenter
           args:
+            - "-t"
+            - "1"
+            - "-u"
+            - "-i"
+            - "-n"
+            - "-p"
+            - "/usr/local/go/bin/crusoe-csi-driver"
             - "--crusoe-csi-driver-type={{ $csiType }}"
             - "--services=node,identity"
             - "--socket-address=unix:/csi/{{ $csiType }}-node.sock"
@@ -55,6 +105,16 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            {{- with $.Values.crusoe.nfs }}
+            {{- with .remotePorts }}
+            - name: NFS_REMOTE_PORTS
+              value: {{ quote . }}
+            {{- end }}
+            {{- with .ip }}
+            - name: NFS_IP
+              value: {{ quote . }}
+            {{- end }}
+            {{- end }}
             {{- with $.Values.crusoe.api }}
             {{- with .endpoint }}
             - name: CRUSOE_API_ENDPOINT
@@ -157,6 +217,16 @@ spec:
             - name: socket-dir
               mountPath: /csi
       volumes:
+        {{ if eq $csiType "fs" }}
+        - name: install-script
+          configMap:
+            name: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csiType }}-install-nfs-prerequisites-script
+            defaultMode: 0755
+        - name: host-root
+          hostPath:
+            path: /
+            type: Directory
+        {{- end }}
         # This volume is where the socket for kubelet->driver communication is done
         - name: socket-dir
           hostPath:

@@ -21,11 +21,15 @@ crusoe:
       secretKeyPath: "CRUSOE_SECRET_KEY"
   api:
     # Specify the Crusoe API endpoint to use directly.
-    # Alternatively, the driver can read the endpoint from a secret
     #endpoint: "https://api.crusoecloud.com/v1alpha5"
+    # Alternatively, the driver can read the endpoint from a secret
     #fromSecret:
     #  name: "crusoe-api-keys"
     #  endpointKeyPath: "CRUSOE_API_ENDPOINT"
+  nfs:
+    # Specify the NFS remote ports and IP.
+    remotePorts: "100.64.0.2-100.64.0.17"
+    ip: "100.64.0.2"
 
 controller:
   # Extra configuration to add under the deployment spec
@@ -38,7 +42,7 @@ controller:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.3.3"
+      tag: "v0.4.0"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:
@@ -81,7 +85,7 @@ node:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.3.3"
+      tag: "v0.4.0"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:
@@ -91,6 +95,17 @@ node:
       limits:
         cpu: 100m
         memory: 200Mi
+  installNfsPrerequisites:
+    image:
+      repository: busybox
+      tag: "1.37.0-glibc"
+    resources:
+      requests:
+        cpu: 1
+        memory: 2000Mi
+      limits:
+        cpu: 1
+        memory: 2000Mi
   driverRegistrar:
     image:
       repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
