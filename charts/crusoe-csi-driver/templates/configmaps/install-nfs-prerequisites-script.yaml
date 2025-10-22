@@ -26,7 +26,7 @@ data:
     CSI_TYPE = "{{ $csiType }}"
     DONE_FILE = Path(f"/opt/crusoe-csi-driver/{CSI_TYPE}/nfs-prerequisites-installed")
 
-    def run_command(command, timeout=5):
+    def run_command(command, timeout=60):
         try:
             result = subprocess.run(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True, shell=True, timeout=timeout)
             # return error only if error code is non-zero
@@ -101,7 +101,7 @@ data:
                 return err
 
         print("Installing the NFS driver...")
-        out, err = run_command(f"DEBIAN_FRONTEND=noninteractive sudo apt-get -y install /tmp/{nfs_folder}/deb-dist/vastnfs*.deb", 300)
+        out, err = run_command(f"DEBIAN_FRONTEND=noninteractive sudo apt-get -y install /tmp/{nfs_folder}/deb-dist/vastnfs*.deb", 3000)
         if err:
             print(f"ERROR: something went wrong when manually installing the driver: {err}")
             return err
