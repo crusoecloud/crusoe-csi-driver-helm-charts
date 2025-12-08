@@ -102,10 +102,9 @@ node:
     resources:
       requests:
         cpu: 1
-        memory: 2000Mi
+        memory: 4096Mi
       limits:
         cpu: 1
-        memory: 2000Mi
   driverRegistrar:
     image:
       repository: registry.k8s.io/sig-storage/csi-node-driver-registrar

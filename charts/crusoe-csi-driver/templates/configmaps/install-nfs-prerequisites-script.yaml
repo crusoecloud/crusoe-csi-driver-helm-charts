@@ -108,10 +108,25 @@ data:
 
         print("The NFS driver has been installed!")
     def check_if_VAST_NFS_driver_installed():
+        # First check if DKMS-built modules are present (from baked images)
+        kernel_version, err = run_command("uname -r")
+        if not err and kernel_version:
+            dkms_module_path = f"/lib/modules/{kernel_version}/updates/dkms/nfs.ko"
+            out, err = run_command(f"test -f {dkms_module_path} && echo 'exists'")
+            if out and "exists" in out:
+                # Verify it's actually a VAST module by checking for VAST signature
+                out, err = run_command(f"strings {dkms_module_path} | grep -i vastdata")
+                if out and "vastdata" in out:
+                    print(f"VAST NFS module detected in DKMS path: {dkms_module_path}")
+                    print("VAST NFS already installed via baked image, skipping installation.")
+                    return True, None
+
+        # Fall back to dpkg check for backward compatibility
         out, err = run_command("dpkg -l | grep vastnfs")
         if err:
             return False, err
         if out and "vastnfs-modules" in out:
+            print("VAST NFS package detected via dpkg.")
             return True, None
         return False, None
     def install_VAST_NFS_driver(auto_confirm = False):
