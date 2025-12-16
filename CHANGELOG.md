@@ -1,3 +1,43 @@
+## v0.10.3
+
+* Enhanced NFS driver checks to detect and automatically fix broken installations.
+    * CSI init container now validates NFS driver functionality before mounting volumes.
+* Health checks run on every pod restart to ensure NFS reliability.
+
+### Upgrade Caveats
+
+* These instructions are applicable for upgrades from any version prior to v0.10.3 to v0.10.3.
+    * If upgrading from a version prior to v0.7.0, please follow the upgrade instructions for v0.7.0 first.
+* CSI node pods will restart with the updated init container script.
+* Existing volumes and mounts will not be affected by the upgrade.
+* Nodes with broken NFS installations will automatically remediate on pod restart.
+
+### Upgrade Instructions
+
+* To update the chart in the `crusoe-system` namespace:
+    * Update repositories: `helm repo update`
+    * Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version v0.10.3 -n crusoe-system`
+
+## v0.10.2
+
+* Added support for NFS driver pre-installed in worker images for faster node startup.
+    * CSI init container automatically detects pre-installed NFS drivers and skips redundant installation.
+    * Significantly reduces node initialization time when using NFS-enabled worker images.
+
+### Upgrade Caveats
+
+* These instructions are applicable for upgrades from any version prior to v0.10.2 to v0.10.2.
+    * If upgrading from a version prior to v0.7.0, please follow the upgrade instructions for v0.7.0 first.
+* Volume creation, attachment, detachment, and deletion may be momentarily delayed while the Crusoe CSI Driver is being updated.
+* Existing volumes managed by CSI will not be deleted or modified by the upgrade.
+* Volumes already successfully mounted by pods will not be affected by the upgrade.
+
+### Upgrade Instructions
+
+* To update the chart in the `crusoe-system` namespace:
+    * Update repositories: `helm repo update`
+    * Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version v0.10.2 -n crusoe-system`
+
 ## v0.10.0
 
 * NFS mounting support has been enabled for the `fs` driver.

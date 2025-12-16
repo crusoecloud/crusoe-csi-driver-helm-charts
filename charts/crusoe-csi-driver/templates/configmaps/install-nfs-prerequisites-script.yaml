@@ -107,6 +107,24 @@ data:
             return err
 
         print("The NFS driver has been installed!")
+    def verify_nfs_driver():
+        """Verify VAST NFS driver is functional by checking vastnfs-ctl and rpcbind"""
+        # Check vastnfs-ctl status
+        out, err = run_command("vastnfs-ctl status")
+        if err or "version:" not in out:
+            print(f"WARNING: vastnfs-ctl status check failed: {err}")
+            return False, "VAST NFS driver not functional"
+
+        print(f"VAST NFS driver status verified: {out.splitlines()[0]}")
+
+        # Check rpcbind service
+        out, err = run_command("systemctl is-active rpcbind 2>/dev/null || echo 'inactive'")
+        if "active" not in out:
+            print("Starting rpcbind service...")
+            run_command("sudo systemctl start rpcbind")
+            run_command("sudo systemctl enable rpcbind")
+
+        return True, None
     def check_if_VAST_NFS_driver_installed():
         # First check if DKMS-built modules are present (from baked images)
         kernel_version, err = run_command("uname -r")
@@ -118,6 +136,14 @@ data:
                 out, err = run_command(f"strings {dkms_module_path} | grep -i vastdata")
                 if out and "vastdata" in out:
                     print(f"VAST NFS module detected in DKMS path: {dkms_module_path}")
+                    print("Performing functional verification of VAST NFS driver...")
+
+                    is_functional, err = verify_nfs_driver()
+                    if not is_functional:
+                        print("VAST NFS driver not functional - will attempt reinstallation")
+                        return False, err
+
+                    print("VAST NFS driver functional verification complete.")
                     print("VAST NFS already installed via baked image, skipping installation.")
                     return True, None
 
@@ -127,6 +153,13 @@ data:
             return False, err
         if out and "vastnfs-modules" in out:
             print("VAST NFS package detected via dpkg.")
+            print("Performing functional verification...")
+
+            is_functional, err = verify_nfs_driver()
+            if not is_functional:
+                return False, err
+
+            print("VAST NFS driver verified.")
             return True, None
         return False, None
     def install_VAST_NFS_driver(auto_confirm = False):
@@ -259,23 +292,50 @@ data:
 
         return args.y
     def do_main():
-
-        if DONE_FILE.exists():
-            print("NFS prerequisites have already been installed.")
-            return
-
         auto_confirm = check_args_y()
+
+        # If DONE_FILE exists, validate health
+        if DONE_FILE.exists():
+            print("Previous installation detected, performing health check...")
+            is_functional, err = verify_nfs_driver()
+
+            if is_functional:
+                print("NFS driver is healthy, skipping installation.")
+                return
+            else:
+                print(f"Health check failed: {err}")
+                print("NFS driver validation failed, triggering reinstallation...")
+                try:
+                    DONE_FILE.unlink()  # Delete the marker
+                except Exception as e:
+                    print(f"Warning: Could not delete DONE_FILE: {e}")
+                # Fall through to reinstallation
+
+        # Install or reinstall NFS driver
+        print("Installing/reinstalling NFS driver...")
         success = install_VAST_NFS_driver(auto_confirm)
 
         if success:
             update_read_ahead_cache(auto_confirm)
             optimize_network_interface(auto_confirm)
-            DONE_FILE.parent.mkdir(parents=True, exist_ok=True)
-            timestamp = datetime.now(timezone.utc).isoformat()
-            msg = f"NFS prerequisites installed at {timestamp}"
-            DONE_FILE.write_text(msg + "\n")
-            print(msg)
+
+            # Final validation before marking as done
+            print("Performing final validation...")
+            is_functional, err = verify_nfs_driver()
+
+            if is_functional:
+                # Only write DONE_FILE if verification passed
+                DONE_FILE.parent.mkdir(parents=True, exist_ok=True)
+                timestamp = datetime.now(timezone.utc).isoformat()
+                msg = f"NFS prerequisites installed and validated at {timestamp}"
+                DONE_FILE.write_text(msg + "\n")
+                print(msg)
+            else:
+                print(f"ERROR: Installation completed but validation failed: {err}")
+                print("Installation will be retried on next pod restart.")
+                sys.exit(1)
         else:
+            print("ERROR: Installation failed")
             sys.exit(1)
     if __name__ == "__main__":
         do_main()
