@@ -18,7 +18,7 @@ Please refer to the [CHANGELOG](CHANGELOG.md) for breaking changes and upgrade i
 ## Prerequisites
 
 The examples below assume the intended namespace
-for the CSI Driver is `crusoe-csi-driver`.
+for the CSI Driver is `crusoe-system`.
 
 ### Setting up credentials
 
@@ -36,13 +36,13 @@ data:
 kind: Secret
 metadata:
   name: crusoe-api-keys
-  namespace: crusoe-csi-driver
+  namespace: crusoe-system
 
 ```
 
 An appropriate secret can be created in your cluster by filling out the command below and running it in the terminal:
 ```shell
-kubectl create secret generic crusoe-api-keys -n crusoe-csi-driver -o yaml \
+kubectl create secret generic crusoe-api-keys -n crusoe-system -o yaml \
 --from-literal=CRUSOE_ACCESS_KEY=$YOUR_CRUSOE_ACCESS_KEY \
 --from-literal=CRUSOE_SECRET_KEY=$YOUR_CRUSOE_SECRET_KEY
 ```
@@ -67,9 +67,9 @@ the latest versions of the packages.  You can then run `helm search repo
 ## Installation
 
 
-To install the Crusoe CSI Driver chart in the `crusoe-csi-driver` namespace:
+To install the Crusoe CSI Driver chart in the `crusoe-system` namespace:
 
-    helm install <chart alias> <repo alias>/crusoe-csi-driver -n crusoe-csi-driver
+    helm install <chart alias> <repo alias>/crusoe-csi-driver -n crusoe-system
 
 To uninstall the chart:
 
