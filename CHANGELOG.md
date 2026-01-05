@@ -1,3 +1,18 @@
+## v0.10.4
+* Fixed a bug where read-only mounts of shared volumes could fail on virtiofs due to the `noload` mount option being passed.
+
+### Upgrade Caveats
+
+* These instructions are applicable for upgrades from any version prior to v0.10.4 to v0.10.4.
+* CSI node pods will restart with the updated driver.
+* Existing volumes and mounts will not be affected by the upgrade.
+
+### Upgrade Instructions
+
+* To update the chart in the `crusoe-system` namespace:
+    * Update repositories: `helm repo update`
+    * Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version v0.10.4 -n crusoe-system`
+
 ## v0.10.3
 
 * Enhanced NFS driver checks to detect and automatically fix broken installations.
