@@ -42,7 +42,7 @@ controller:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.4.1"
+      tag: "v0.4.3"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:
@@ -82,10 +82,27 @@ node:
     - operator: Exists
       effect: NoSchedule
   priorityClassName: "system-node-critical"
+  # DNS configuration for fs node daemonset
+  # When enabled, sets dnsPolicy to None and uses custom dnsConfig
+  # CoreDNS service IP is automatically discovered via Helm lookup
+  fs:
+    dns:
+      enabled: true
+      config:
+        # Additional nameservers to append after CoreDNS (which is auto-discovered)
+        additionalNameservers:
+          - "127.0.0.53"   # systemd-resolved
+        searches:
+          - "svc.cluster.local"
+          - "cluster.local"
+          - "crusoecloudcompute.com"
+        options:
+          - name: "ndots"
+            value: "2"
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.4.1"
+      tag: "v0.4.3"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:
