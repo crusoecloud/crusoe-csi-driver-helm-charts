@@ -40,33 +40,6 @@ spec:
       priorityClassName: {{ . }}
       {{- end }}
       {{- if eq $csiType "fs" }}
-      {{- if $.Values.node.fs.dns.enabled }}
-      {{- $coreDnsIP := "" }}
-      {{- $coreDnsService := lookup "v1" "Service" "kube-system" "coredns" }}
-      {{- if $coreDnsService }}
-        {{- $coreDnsIP = $coreDnsService.spec.clusterIP }}
-      {{- end }}
-      dnsPolicy: None
-      dnsConfig:
-        nameservers:
-          {{- if $coreDnsIP }}
-          - {{ $coreDnsIP | quote }}
-          {{- end }}
-          {{- range $.Values.node.fs.dns.config.additionalNameservers }}
-          - {{ . | quote }}
-          {{- end }}
-        searches:
-          {{- range $.Values.node.fs.dns.config.searches }}
-          - {{ . | quote }}
-          {{- end }}
-        options:
-          {{- range $.Values.node.fs.dns.config.options }}
-          - name: {{ .name | quote }}
-            {{- if .value }}
-            value: {{ .value | quote }}
-            {{- end }}
-          {{- end }}
-      {{- end }}
       initContainers:
         - name: install-nfs-prerequisites
           image: "{{ $.Values.node.installNfsPrerequisites.image.repository }}:{{ $.Values.node.installNfsPrerequisites.image.tag }}"

@@ -42,7 +42,7 @@ controller:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.4.3"
+      tag: "v0.4.4"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:
@@ -102,7 +102,7 @@ node:
   crusoeCsiDriver:
     image:
       repository: ghcr.io/crusoecloud/crusoe-csi-driver
-      tag: "v0.4.3"
+      tag: "v0.4.4"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:
