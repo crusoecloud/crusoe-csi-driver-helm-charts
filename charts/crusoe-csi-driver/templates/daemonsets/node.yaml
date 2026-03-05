@@ -42,7 +42,7 @@ spec:
       {{- if eq $csiType "fs" }}
       initContainers:
         - name: install-nfs-prerequisites
-          image: "{{ $.Values.node.installNfsPrerequisites.image.repository }}:{{ $.Values.node.installNfsPrerequisites.image.tag }}"
+          image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.node.installNfsPrerequisites.image.registry "repository" $.Values.node.installNfsPrerequisites.image.repository "tag" $.Values.node.installNfsPrerequisites.image.tag) | quote }}
           command:
             - "/bin/sh"
           args:
@@ -81,7 +81,7 @@ spec:
       {{- end }}
       containers:
         - name: crusoe-csi-driver
-          image: "{{ $.Values.node.crusoeCsiDriver.image.repository }}:{{ $.Values.node.crusoeCsiDriver.image.tag }}"
+          image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.node.crusoeCsiDriver.image.registry "repository" $.Values.node.crusoeCsiDriver.image.repository "tag" $.Values.node.crusoeCsiDriver.image.tag) | quote }}
           imagePullPolicy: {{ $.Values.node.crusoeCsiDriver.image.imagePullPolicy }}
           command:
             - nsenter
@@ -143,6 +143,7 @@ spec:
                 secretKeyRef:
                   name: {{ $.Values.crusoe.secrets.crusoeApiKeys.secretName }}
                   key: {{ $.Values.crusoe.secrets.crusoeApiKeys.secretKeyPath }}
+            {{ include "crusoe-csi-driver.proxy-env" $.Values.crusoe | nindent 12 }}
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -174,7 +175,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         - name: csi-driver-registrar
-          image: "{{ $.Values.node.driverRegistrar.image.repository }}:{{ $.Values.node.driverRegistrar.image.tag }}"
+          image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.node.driverRegistrar.image.registry "repository" $.Values.node.driverRegistrar.image.repository "tag" $.Values.node.driverRegistrar.image.tag) | quote }}
           args:
             - "--v=5"
             - "--csi-address=/csi/{{ $csiType }}-node.sock"
@@ -207,7 +208,7 @@ spec:
             timeoutSeconds: 2
             periodSeconds: 2
         - name: csi-liveness-probe
-          image: "{{ $.Values.node.livenessProbe.image.repository }}:{{ $.Values.controller.livenessProbe.image.tag }}"
+          image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.node.livenessProbe.image.registry "repository" $.Values.node.livenessProbe.image.repository "tag" $.Values.node.livenessProbe.image.tag) | quote }}
           args:
             - "--v=5"
             - "--csi-address=/csi/{{ $csiType }}-node.sock"

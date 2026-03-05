@@ -41,7 +41,7 @@ spec:
       {{- end }}
       containers:
         - name: crusoe-csi-driver
-          image: "{{ $.Values.controller.crusoeCsiDriver.image.repository }}:{{ $.Values.controller.crusoeCsiDriver.image.tag }}"
+          image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.controller.crusoeCsiDriver.image.registry "repository" $.Values.controller.crusoeCsiDriver.image.repository "tag" $.Values.controller.crusoeCsiDriver.image.tag) | quote }}
           imagePullPolicy: {{ $.Values.controller.crusoeCsiDriver.image.imagePullPolicy }}
           args:
             - "--crusoe-csi-driver-type={{ $csiType }}"
@@ -84,6 +84,7 @@ spec:
                 secretKeyRef:
                   name: {{$.Values.crusoe.secrets.crusoeApiKeys.secretName}}
                   key: {{$.Values.crusoe.secrets.crusoeApiKeys.secretKeyPath}}
+            {{ include "crusoe-csi-driver.proxy-env" $.Values.crusoe | nindent 12 }}
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -113,7 +114,7 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         - name: csi-attacher
-          image: "{{ $.Values.controller.attacher.image.repository }}:{{ $.Values.controller.attacher.image.tag }}"
+          image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.controller.attacher.image.registry "repository" $.Values.controller.attacher.image.repository "tag" $.Values.controller.attacher.image.tag) | quote }}
           args:
             - "--v=5"
             - "--csi-address=/csi/{{ $csiType }}-controller.sock"
@@ -123,7 +124,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-provisioner
-          image: "{{ $.Values.controller.provisioner.image.repository }}:{{ $.Values.controller.provisioner.image.tag }}"
+          image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.controller.provisioner.image.registry "repository" $.Values.controller.provisioner.image.repository "tag" $.Values.controller.provisioner.image.tag) | quote }}
           args:
             - "--v=5"
             - "--csi-address=/csi/{{ $csiType }}-controller.sock"
@@ -137,7 +138,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-resizer
-          image: "{{ $.Values.controller.resizer.image.repository }}:{{ $.Values.controller.resizer.image.tag }}"
+          image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.controller.resizer.image.registry "repository" $.Values.controller.resizer.image.repository "tag" $.Values.controller.resizer.image.tag) | quote }}
           args:
             - "--v=5"
             - "--csi-address=/csi/{{ $csiType }}-controller.sock"
@@ -148,7 +149,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-liveness-probe
-          image: "{{ $.Values.controller.livenessProbe.image.repository }}:{{ $.Values.controller.livenessProbe.image.tag }}"
+          image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.controller.livenessProbe.image.registry "repository" $.Values.controller.livenessProbe.image.repository "tag" $.Values.controller.livenessProbe.image.tag) | quote }}
           args:
             - "--v=5"
             - "--csi-address=/csi/{{ $csiType }}-controller.sock"

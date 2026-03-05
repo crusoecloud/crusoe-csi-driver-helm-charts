@@ -1,4 +1,12 @@
 # Default values for crusoe-csi-driver.
+
+global:
+  # Override the image registry for all images.
+  # When set, this value takes precedence over the per-image registry field, redirecting
+  # all images to a single private registry (e.g., "myregistry.internal").
+  # Individual image registries and repositories can still be overridden per-container.
+  imageRegistry: ""
+
 csi:
   ssd:
     enabled: true
@@ -30,6 +38,21 @@ crusoe:
     # Specify the NFS remote ports and IP.
     remotePorts: "100.64.0.2-100.64.0.17"
     ip: "100.64.0.2"
+  proxy:
+    # Enable proxy support for private clusters without direct internet access.
+    # When enabled, HTTP_PROXY, HTTPS_PROXY, and NO_PROXY are set on the CSI driver container.
+    enabled: false
+    scheme: ""
+    host: ""
+    port: ""
+    noProxy:
+      # CIDR range used by Cilium for pods.
+      # If left empty, auto-discovered from the cilium-config ConfigMap in kube-system.
+      podCIDR: ""
+      # Additional CIDR to append to NO_PROXY. The driver itself makes no direct HTTP calls
+      # to VPC addresses, but this field is provided as an escape hatch for custom environments.
+      # Leave empty unless you have a specific reason to add a CIDR here.
+      vpcCIDR: ""
 
 controller:
   # Extra configuration to add under the deployment spec
@@ -41,7 +64,8 @@ controller:
   priorityClassName: "system-cluster-critical"
   crusoeCsiDriver:
     image:
-      repository: ghcr.io/crusoecloud/crusoe-csi-driver
+      registry: ghcr.io/crusoecloud
+      repository: crusoe-csi-driver
       tag: "v0.4.4"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
@@ -54,19 +78,23 @@ controller:
         memory: 200Mi
   attacher:
     image:
-      repository: registry.k8s.io/sig-storage/csi-attacher
+      registry: registry.k8s.io
+      repository: sig-storage/csi-attacher
       tag: "v4.8.1"
   provisioner:
     image:
-      repository: registry.k8s.io/sig-storage/csi-provisioner
+      registry: registry.k8s.io
+      repository: sig-storage/csi-provisioner
       tag: "v5.2.0"
   resizer:
     image:
-      repository: registry.k8s.io/sig-storage/csi-resizer
+      registry: registry.k8s.io
+      repository: sig-storage/csi-resizer
       tag: "v1.13.2"
   livenessProbe:
     image:
-      repository: registry.k8s.io/sig-storage/livenessprobe
+      registry: registry.k8s.io
+      repository: sig-storage/livenessprobe
       tag: "v2.15.0"
 
 node:
@@ -101,7 +129,8 @@ node:
             value: "2"
   crusoeCsiDriver:
     image:
-      repository: ghcr.io/crusoecloud/crusoe-csi-driver
+      registry: ghcr.io/crusoecloud
+      repository: crusoe-csi-driver
       tag: "v0.4.4"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
@@ -114,6 +143,7 @@ node:
         memory: 200Mi
   installNfsPrerequisites:
     image:
+      registry: ""
       repository: busybox
       tag: "1.37.0-glibc"
     resources:
@@ -124,9 +154,11 @@ node:
         cpu: 1
   driverRegistrar:
     image:
-      repository: registry.k8s.io/sig-storage/csi-node-driver-registrar
+      registry: registry.k8s.io
+      repository: sig-storage/csi-node-driver-registrar
       tag: "v2.13.0"
   livenessProbe:
     image:
-      repository: registry.k8s.io/sig-storage/livenessprobe
+      registry: registry.k8s.io
+      repository: sig-storage/livenessprobe
       tag: "v2.15.0"
