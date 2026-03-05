@@ -1,3 +1,17 @@
+## v0.10.12
+
+* Added `NodeGetVolumeStats` support to the CSI driver.
+    * The driver now reports filesystem volume usage (bytes and inodes) via `NodeGetVolumeStats`, enabling kubelet to populate volume statistics Prometheus metrics (`kubelet_volume_stats_*`).
+    * Block volumes return a healthy `VolumeCondition` with no usage data.
+    * The `GET_VOLUME_STATS` node capability is now advertised.
+* This resolves an issue where volume metrics were unavailable, preventing monitoring and alerting on disk usage conditions.
+
+### Upgrade Instructions
+
+* To update the chart in the `crusoe-system` namespace:
+    * Update repositories: `helm repo update`
+    * Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version v0.10.12 -n crusoe-system`
+
 ## v0.10.4
 * Fixed a bug where read-only mounts of shared volumes could fail on virtiofs due to the `noload` mount option being passed.
 
