@@ -3,7 +3,7 @@ name: crusoe-csi-driver
 description: A Helm chart for the Crusoe Cloud CSI Driver
 
 type: application
-version: 0.10.12
+version: 0.10.13
 appVersion: "v0.4.5"
 
 kubeVersion: ">=1.17.0-0"
