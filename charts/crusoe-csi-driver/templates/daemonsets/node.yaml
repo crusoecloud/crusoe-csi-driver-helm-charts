@@ -6,6 +6,10 @@ kind: DaemonSet
 metadata:
   name: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csiType }}-node
 spec:
+  {{- with $.Values.node.updateStrategy }}
+  updateStrategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csiType }}

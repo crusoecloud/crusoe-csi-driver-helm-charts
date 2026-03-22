@@ -100,6 +100,13 @@ controller:
 node:
   # Extra configuration to add under the daemonset spec
   customSpec: { }
+  # Override the default DaemonSet update strategy (RollingUpdate with maxUnavailable: 1).
+  # Example:
+  #   updateStrategy:
+  #     type: RollingUpdate
+  #     rollingUpdate:
+  #       maxUnavailable: "33%"
+  updateStrategy: { }
   nodeSelector: { }
   # Note that the node agent uses a DaemonSet
   # Only NodeAffinity affinities will affect the scheduling of the node agent
