@@ -3,6 +3,26 @@ entries:
   crusoe-csi-driver:
   - apiVersion: v2
     appVersion: v0.4.6
+    created: "2026-04-30T23:14:16.806551621Z"
+    description: A Helm chart for the Crusoe Cloud CSI Driver
+    digest: 4a4327b852efbad8785b0b843843ba5bda585b16f749d1a78f06bb3e35ef7096
+    home: https://github.com/crusoecloud/crusoe-csi-driver
+    keywords:
+    - crusoe
+    - csi
+    kubeVersion: '>=1.17.0-0'
+    maintainers:
+    - name: Crusoe Cloud
+      url: https://github.com/crusoecloud/crusoe-csi-driver/
+    name: crusoe-csi-driver
+    sources:
+    - https://github.com/crusoecloud/crusoe-csi-driver
+    type: application
+    urls:
+    - https://github.com/crusoecloud/crusoe-csi-driver-helm-charts/releases/download/crusoe-csi-driver-0.10.15/crusoe-csi-driver-0.10.15.tgz
+    version: 0.10.15
+  - apiVersion: v2
+    appVersion: v0.4.6
     created: "2026-03-31T03:34:47.267255755Z"
     description: A Helm chart for the Crusoe Cloud CSI Driver
     digest: 804850ba5996fb09c84111f2c756ff8a4a286339a22cc6f3694b6ba729eefeb1
@@ -621,4 +641,4 @@ entries:
     urls:
     - https://github.com/crusoecloud/crusoe-csi-driver-helm-charts/releases/download/crusoe-csi-driver-0.0.2/crusoe-csi-driver-0.0.2.tgz
     version: 0.0.2
-generated: "2026-03-31T03:34:47.267551094Z"
+generated: "2026-04-30T23:14:16.806885999Z"
