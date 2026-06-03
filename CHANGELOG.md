@@ -1,3 +1,17 @@
+## v0.10.18
+
+* Shared filesystems are now supported on **all instance types and slice sizes**, including every L40s slice size (previously limited to full-node slices on GPU instance types). Ships crusoe-csi-driver `v0.4.11`.
+
+### Upgrade Instructions
+
+* Update repositories: `helm repo update`
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.18 -n crusoe-system --reuse-values`
+    * `--reuse-values` preserves the existing driver configuration (project ID, API keys, NFS settings).
+* **Existing GPU nodes — action required:** this release changes the node topology label `fs.csi.crusoe.ai/supports-shared-disks` to `true` on affected instance types. CSI topology labels are **immutable** once written, so on any node that previously reported `false` the `node-driver-registrar` container will `CrashLoopBackOff` with a `detected topology value collision` error until the stale label is cleared. Resolve per affected node by **either**:
+    * recreating the node / node pool — a fresh node registers the correct value cleanly (no manual step), **or**
+    * patching the label in place: `kubectl label node <node> fs.csi.crusoe.ai/supports-shared-disks=true --overwrite`
+    * Newly-created clusters and nodes are not affected.
+
 ## v0.10.12
 
 * Added `NodeGetVolumeStats` support to the CSI driver.
