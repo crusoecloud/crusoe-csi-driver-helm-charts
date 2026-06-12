@@ -1,3 +1,14 @@
+## v0.10.19
+
+* Lowered the `csi-liveness-probe` sidecar log verbosity from `--v=5` to `--v=2` on both the node DaemonSet and the controller Deployment. At `--v=5` the liveness probe logged every health-check round-trip — and because the kubelet liveness/readiness probes hit it on a 2-second period, this produced a very high, continuous volume of routine `"Health check succeeded"` / gRPC-trace lines with no diagnostic value. At `--v=2` successful probes are silent while probe **failures are still logged**. The `/healthz` health-checking behavior and the Prometheus `/metrics` endpoint are unchanged. The other CSI sidecars (`csi-node-driver-registrar`, `csi-attacher`, `csi-provisioner`, `csi-resizer`) intentionally remain at `--v=5`. No driver image change (`appVersion` unchanged).
+
+### Upgrade Instructions
+
+* Update repositories: `helm repo update`
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.19 -n crusoe-system --reuse-values`
+    * `--reuse-values` preserves the existing driver configuration (project ID, API keys, NFS settings).
+* Safe in-place upgrade — this only lowers sidecar log verbosity. Pods roll normally; there are no topology-label changes and no node recreation required.
+
 ## v0.10.18
 
 * Shared filesystems are now supported on **all instance types and slice sizes**, including every L40s slice size (previously limited to full-node slices on GPU instance types). Ships crusoe-csi-driver `v0.4.11`.

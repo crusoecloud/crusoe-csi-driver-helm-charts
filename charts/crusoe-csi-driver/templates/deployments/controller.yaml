@@ -151,7 +151,7 @@ spec:
         - name: csi-liveness-probe
           image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.controller.livenessProbe.image.registry "repository" $.Values.controller.livenessProbe.image.repository "tag" $.Values.controller.livenessProbe.image.tag) | quote }}
           args:
-            - "--v=5"
+            - "--v=2"
             - "--csi-address=/csi/{{ $csiType }}-controller.sock"
             - "--http-endpoint=0.0.0.0:8084"
             - "--metrics-path=/metrics"

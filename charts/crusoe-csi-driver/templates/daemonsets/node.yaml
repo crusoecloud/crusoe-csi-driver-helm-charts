@@ -210,7 +210,7 @@ spec:
         - name: csi-liveness-probe
           image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.node.livenessProbe.image.registry "repository" $.Values.node.livenessProbe.image.repository "tag" $.Values.node.livenessProbe.image.tag) | quote }}
           args:
-            - "--v=5"
+            - "--v=2"
             - "--csi-address=/csi/{{ $csiType }}-node.sock"
             - "--http-endpoint=0.0.0.0:8084" # Using 8084 instead of 8082 to align with controller
             - "--metrics-path=/metrics"
