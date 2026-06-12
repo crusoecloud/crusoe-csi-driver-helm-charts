@@ -15,6 +15,11 @@ spec:
         app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csiType }}
     spec:
       hostPID: true
+      {{- if and (eq $csiType "fs") $.Values.node.fs.dns.useNodeResolver }}
+      # The fs node resolves only external names; use the node's resolver
+      # instead of the in-cluster DNS service.
+      dnsPolicy: Default
+      {{- end }}
       serviceAccountName: {{ include "crusoe-csi-driver.fullname" $ }}-node
       {{- with $.Values.node.crusoeCsiDriver.image.imagePullSecrets }}
       imagePullSecrets:

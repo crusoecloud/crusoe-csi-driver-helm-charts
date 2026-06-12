@@ -1,3 +1,15 @@
+## v0.10.20
+
+* The `fs` node DaemonSet now resolves DNS via the node's resolver (`dnsPolicy: Default`) instead of the in-cluster DNS service. The driver resolves only external names (the storage endpoint and the API endpoint) and does not require in-cluster DNS, so this keeps NFS name resolution on the node's own DNS path. Controlled by `node.fs.dns.useNodeResolver` (default `true`).
+
+### Upgrade Instructions
+
+* Update repositories: `helm repo update`
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.20 -n crusoe-system --reuse-values`
+    * `--reuse-values` preserves the existing driver configuration (project ID, API keys, NFS settings).
+* The `fs` node DaemonSet pods restart on upgrade to pick up the new DNS policy. Existing NFS mounts live in the kernel and are unaffected; only new mounts use the updated resolution path.
+* To opt out and keep using the in-cluster DNS service, set `node.fs.dns.useNodeResolver=false`.
+
 ## v0.10.19
 
 * Lowered the `csi-liveness-probe` sidecar log verbosity from `--v=5` to `--v=2` on both the node DaemonSet and the controller Deployment. At `--v=5` the liveness probe logged every health-check round-trip — and because the kubelet liveness/readiness probes hit it on a 2-second period, this produced a very high, continuous volume of routine `"Health check succeeded"` / gRPC-trace lines with no diagnostic value. At `--v=2` successful probes are silent while probe **failures are still logged**. The `/healthz` health-checking behavior and the Prometheus `/metrics` endpoint are unchanged. The other CSI sidecars (`csi-node-driver-registrar`, `csi-attacher`, `csi-provisioner`, `csi-resizer`) intentionally remain at `--v=5`. No driver image change (`appVersion` unchanged).

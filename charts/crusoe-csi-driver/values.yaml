@@ -110,23 +110,14 @@ node:
     - operator: Exists
       effect: NoSchedule
   priorityClassName: "system-node-critical"
-  # DNS configuration for fs node daemonset
-  # When enabled, sets dnsPolicy to None and uses custom dnsConfig
-  # CoreDNS service IP is automatically discovered via Helm lookup
+  # DNS for the fs node DaemonSet. When useNodeResolver is true, the pod uses the
+  # node's resolver (dnsPolicy: Default) instead of the in-cluster DNS service.
+  # The fs node driver resolves only external names (the storage endpoint and the
+  # API endpoint), so it does not need in-cluster DNS; using the node resolver
+  # keeps NFS name resolution on the node's own DNS path.
   fs:
     dns:
-      enabled: true
-      config:
-        # Additional nameservers to append after CoreDNS (which is auto-discovered)
-        additionalNameservers:
-          - "127.0.0.53"   # systemd-resolved
-        searches:
-          - "svc.cluster.local"
-          - "cluster.local"
-          - "crusoecloudcompute.com"
-        options:
-          - name: "ndots"
-            value: "2"
+      useNodeResolver: true
   crusoeCsiDriver:
     image:
       registry: ghcr.io/crusoecloud
