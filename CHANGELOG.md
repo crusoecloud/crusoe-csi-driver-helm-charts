@@ -1,3 +1,15 @@
+## v0.10.21
+
+* Bump crusoe-csi-driver to `v0.4.12`. The `fs` driver can now resolve the NFS storage endpoint to explicit IPs in userspace and hand them to the mount, instead of relying on in-kernel DNS resolution while the mount is in progress. This removes a class of intermittent NFS mount failures caused by name resolution in the mount path. The behavior is gated by a server-side, per-project flag and is **off by default**, so this upgrade is a no-op until the flag is enabled for a project.
+
+### Upgrade Instructions
+
+* Update repositories: `helm repo update`
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.21 -n crusoe-system --reuse-values`
+    * `--reuse-values` preserves the existing driver configuration (project ID, API keys, NFS settings).
+* The `fs` node DaemonSet pods restart on upgrade to pick up the new image. Existing NFS mounts live in the kernel and are unaffected; only new mounts use the updated path.
+* No topology-label changes — safe in-place upgrade; no node recreation required.
+
 ## v0.10.20
 
 * The `fs` node DaemonSet now resolves DNS via the node's resolver (`dnsPolicy: Default`) instead of the in-cluster DNS service. The driver resolves only external names (the storage endpoint and the API endpoint) and does not require in-cluster DNS, so this keeps NFS name resolution on the node's own DNS path. Controlled by `node.fs.dns.useNodeResolver` (default `true`).
