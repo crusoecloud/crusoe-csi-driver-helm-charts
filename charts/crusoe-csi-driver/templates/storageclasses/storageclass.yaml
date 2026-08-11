@@ -1,0 +1,25 @@
+{{- $storageClasses := .Values.storageClasses | default dict }}
+{{- range $csiType, $csi := .Values.csi }}
+{{- $sc := index $storageClasses $csiType | default dict }}
+{{- if and $csi.enabled $sc.enabled }}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ required (printf "storageClasses.%s.name is required when storageClasses.%s.enabled is true" $csiType $csiType) $sc.name }}
+  labels:
+    {{- include "crusoe-csi-driver.labels" $ | nindent 4 }}
+  {{- if $sc.isDefault }}
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+  {{- end }}
+provisioner: {{ $csi.driverName }}
+reclaimPolicy: {{ $sc.reclaimPolicy }}
+volumeBindingMode: {{ $sc.volumeBindingMode }}
+allowVolumeExpansion: {{ $sc.allowVolumeExpansion }}
+{{- with $sc.parameters }}
+parameters:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
+{{- end }}
+{{- end }}

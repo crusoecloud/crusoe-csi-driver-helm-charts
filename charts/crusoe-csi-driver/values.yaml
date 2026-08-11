@@ -15,6 +15,42 @@ csi:
     enabled: true
     driverName: "fs.csi.crusoe.ai"
 
+# StorageClasses for each driver. Both are OFF by default so that installing or
+# upgrading this chart never creates a StorageClass you did not ask for, and never
+# changes which class a PVC without a storageClassName binds against. Clusters that
+# manage their own StorageClasses are therefore unaffected by an upgrade.
+#
+# A StorageClass is rendered only when both csi.<type>.enabled and
+# storageClasses.<type>.enabled are true. Enabling a class whose driver is disabled
+# would leave a provisioner with nothing behind it, which binds nothing.
+#
+# Set isDefault on at most one class. Kubernetes tolerates more than one default but
+# the resolution between them is not something to rely on.
+#
+# Most fields on a StorageClass are immutable once created. To change reclaimPolicy,
+# volumeBindingMode, or parameters afterwards, delete the class and let the next
+# upgrade recreate it. Existing PersistentVolumes keep the settings they were created
+# with.
+storageClasses:
+  ssd:
+    enabled: false
+    isDefault: false
+    name: crusoe-ssd
+    reclaimPolicy: Delete
+    volumeBindingMode: WaitForFirstConsumer
+    allowVolumeExpansion: true
+    # No StorageClass parameters are supported yet. CreateVolume does not read them
+    # and the block size is fixed by the driver. Present for forward compatibility.
+    parameters: {}
+  fs:
+    enabled: false
+    isDefault: false
+    name: crusoe-fs
+    reclaimPolicy: Delete
+    volumeBindingMode: WaitForFirstConsumer
+    allowVolumeExpansion: true
+    parameters: {}
+
 crusoe:
   # If not running on a Crusoe Managed Kubernetes cluster, projectID should be set to the Crusoe Cloud project ID
   # for your cluster.

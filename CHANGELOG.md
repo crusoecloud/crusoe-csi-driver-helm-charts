@@ -1,3 +1,40 @@
+## v0.10.22
+
+* The chart can now create the StorageClasses for you, instead of leaving them as example YAML to apply by hand. Two classes are available: `crusoe-ssd` (`ssd.csi.crusoe.ai`, ReadWriteOnce, block or filesystem) and `crusoe-fs` (`fs.csi.crusoe.ai`, ReadWriteOnce and ReadWriteMany). Either can be annotated as the cluster default, so a PersistentVolumeClaim that omits `storageClassName` binds instead of staying `Pending`.
+* **Both classes are off by default, so this upgrade creates nothing and changes nothing.** If you already manage your own StorageClasses, or your automation creates them after installing this chart, an upgrade to `0.10.22` leaves that untouched. Opt in when you are ready.
+* No driver image change (`appVersion` stays `v0.4.12`).
+
+### Enabling the StorageClasses
+
+```shell
+helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.22 -n crusoe-system \
+  --reset-then-reuse-values \
+  --set storageClasses.ssd.enabled=true \
+  --set storageClasses.fs.enabled=true \
+  --set storageClasses.fs.isDefault=true
+```
+
+* Use `--reset-then-reuse-values` (Helm 3.14 and later), not `--reuse-values`. Both keep the values your release was installed with, and a bare `helm upgrade` would drop them, so one of the two is needed. The difference is that `--reuse-values` also carries the *previous chart's* defaults forward, so any default that changed in the new chart never takes effect. On Helm older than 3.14, save and re-supply the values instead:
+
+    ```shell
+    helm get values crusoe-csi-driver -n crusoe-system > values.yaml   # no --all
+    helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.22 -n crusoe-system \
+      -f values.yaml --set storageClasses.fs.enabled=true --set storageClasses.fs.isDefault=true
+    ```
+
+* Set `isDefault` on at most one class. Kubernetes tolerates more than one default, but which one wins is not worth relying on. If your cluster already has a default StorageClass from another provisioner, adding a second one can change where existing PVCs provision.
+* The class names are configurable via `storageClasses.<type>.name`. They deliberately differ from the names in `examples/` (`crusoe-csi-driver-ssd-sc`, `crusoe-csi-driver-fs-sc`) so that enabling them does not collide with an example you applied by hand. Helm will not adopt an object it does not own, so if a class of the same name already exists outside the release, either rename via values or delete the existing object first.
+* `crusoe-fs` provisions shared filesystems at a **1 TiB minimum, in whole-terabyte increments**. A PVC that asks for less, or for a size that is not a whole number of TiB, is rejected. Use `crusoe-ssd` for smaller volumes. Bear this in mind before making `crusoe-fs` the cluster default: every PVC that omits `storageClassName` then has to satisfy that constraint.
+* Most StorageClass fields are immutable once created. To change `reclaimPolicy`, `volumeBindingMode`, or `parameters` later, delete the class and let the next upgrade recreate it. PersistentVolumes already provisioned keep the settings they were created with.
+* No StorageClass `parameters` are supported yet. The key exists for forward compatibility.
+
+### Upgrade Instructions
+
+* Update repositories: `helm repo update`
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.22 -n crusoe-system --reset-then-reuse-values`
+    * `--reset-then-reuse-values` preserves the existing driver configuration (project ID, API keys, NFS settings) while still picking up changed chart defaults. See the note above on why `--reuse-values` is the wrong flag.
+* No pods restart and no workloads are affected. Without the `--set` flags above, the rendered output is identical to `0.10.21`.
+
 ## v0.10.21
 
 * Bump crusoe-csi-driver to `v0.4.12`. The `fs` driver can now resolve the NFS storage endpoint to explicit IPs in userspace and hand them to the mount, instead of relying on in-kernel DNS resolution while the mount is in progress. This removes a class of intermittent NFS mount failures caused by name resolution in the mount path. The behavior is gated by a server-side, per-project flag and is **off by default**, so this upgrade is a no-op until the flag is enabled for a project.
@@ -5,8 +42,11 @@
 ### Upgrade Instructions
 
 * Update repositories: `helm repo update`
-* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.21 -n crusoe-system --reuse-values`
-    * `--reuse-values` preserves the existing driver configuration (project ID, API keys, NFS settings).
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.21 -n crusoe-system --reset-then-reuse-values`
+    * `--reset-then-reuse-values` (Helm 3.14+) preserves the existing driver configuration
+      (project ID, API keys, NFS settings) while still picking up chart defaults that changed.
+      `--reuse-values` carries the previous chart's defaults forward instead, so the new image
+      tag never lands and the pods keep running the old driver.
 * The `fs` node DaemonSet pods restart on upgrade to pick up the new image. Existing NFS mounts live in the kernel and are unaffected; only new mounts use the updated path.
 * No topology-label changes — safe in-place upgrade; no node recreation required.
 
@@ -17,8 +57,11 @@
 ### Upgrade Instructions
 
 * Update repositories: `helm repo update`
-* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.20 -n crusoe-system --reuse-values`
-    * `--reuse-values` preserves the existing driver configuration (project ID, API keys, NFS settings).
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.20 -n crusoe-system --reset-then-reuse-values`
+    * `--reset-then-reuse-values` (Helm 3.14+) preserves the existing driver configuration
+      (project ID, API keys, NFS settings) while still picking up chart defaults that changed.
+      `--reuse-values` carries the previous chart's defaults forward instead, so the new image
+      tag never lands and the pods keep running the old driver.
 * The `fs` node DaemonSet pods restart on upgrade to pick up the new DNS policy. Existing NFS mounts live in the kernel and are unaffected; only new mounts use the updated resolution path.
 * To opt out and keep using the in-cluster DNS service, set `node.fs.dns.useNodeResolver=false`.
 
@@ -29,8 +72,11 @@
 ### Upgrade Instructions
 
 * Update repositories: `helm repo update`
-* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.19 -n crusoe-system --reuse-values`
-    * `--reuse-values` preserves the existing driver configuration (project ID, API keys, NFS settings).
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.19 -n crusoe-system --reset-then-reuse-values`
+    * `--reset-then-reuse-values` (Helm 3.14+) preserves the existing driver configuration
+      (project ID, API keys, NFS settings) while still picking up chart defaults that changed.
+      `--reuse-values` carries the previous chart's defaults forward instead, so the new image
+      tag never lands and the pods keep running the old driver.
 * Safe in-place upgrade — this only lowers sidecar log verbosity. Pods roll normally; there are no topology-label changes and no node recreation required.
 
 ## v0.10.18
@@ -40,8 +86,11 @@
 ### Upgrade Instructions
 
 * Update repositories: `helm repo update`
-* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.18 -n crusoe-system --reuse-values`
-    * `--reuse-values` preserves the existing driver configuration (project ID, API keys, NFS settings).
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.18 -n crusoe-system --reset-then-reuse-values`
+    * `--reset-then-reuse-values` (Helm 3.14+) preserves the existing driver configuration
+      (project ID, API keys, NFS settings) while still picking up chart defaults that changed.
+      `--reuse-values` carries the previous chart's defaults forward instead, so the new image
+      tag never lands and the pods keep running the old driver.
 * **Existing GPU nodes — action required:** this release changes the node topology label `fs.csi.crusoe.ai/supports-shared-disks` to `true` on affected instance types. CSI topology labels are **immutable** once written, so on any node that previously reported `false` the `node-driver-registrar` container will `CrashLoopBackOff` with a `detected topology value collision` error until the stale label is cleared. Resolve per affected node by **either**:
     * recreating the node / node pool — a fresh node registers the correct value cleanly (no manual step), **or**
     * patching the label in place: `kubectl label node <node> fs.csi.crusoe.ai/supports-shared-disks=true --overwrite`
