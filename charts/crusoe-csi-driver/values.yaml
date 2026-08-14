@@ -42,6 +42,9 @@ storageClasses:
     # No StorageClass parameters are supported yet. CreateVolume does not read them
     # and the block size is fixed by the driver. Present for forward compatibility.
     parameters: {}
+    # Mount options passed through to `mount(8)` on top of any options the driver
+    # itself adds. See the fs equivalent below for caveats that also apply here.
+    mountOptions: []
   fs:
     enabled: false
     isDefault: false
@@ -50,6 +53,7 @@ storageClasses:
     volumeBindingMode: WaitForFirstConsumer
     allowVolumeExpansion: true
     parameters: {}
+    mountOptions: []
 
 crusoe:
   # If not running on a Crusoe Managed Kubernetes cluster, projectID should be set to the Crusoe Cloud project ID

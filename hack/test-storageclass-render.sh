@@ -71,6 +71,13 @@ else
   pass "enabling a class without a name is rejected"
 fi
 
+# 8. mountOptions stay absent by default and render as a list when set.
+check_eq "mountOptions absent by default" 0 \
+  "$(render --set storageClasses.fs.enabled=true | grep -c '^mountOptions' || true)"
+check_eq "mountOptions render when set" "  - noac" \
+  "$(render --set storageClasses.fs.enabled=true --set storageClasses.fs.mountOptions='{noac}' \
+     | grep -A1 '^mountOptions' | tail -1)"
+
 echo
 if [[ "$FAILED" -ne 0 ]]; then
   echo "==> FAILED"

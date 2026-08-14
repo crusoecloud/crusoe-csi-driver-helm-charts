@@ -97,6 +97,7 @@ StorageClasses are unaffected.
 | `storageClasses.<type>.volumeBindingMode` | `WaitForFirstConsumer` | Provisioning waits until a Pod is scheduled, so the volume is placed in the right location. |
 | `storageClasses.<type>.allowVolumeExpansion` | `true` | |
 | `storageClasses.<type>.parameters` | `{}` | No parameters are supported yet. Present for forward compatibility. |
+| `storageClasses.<type>.mountOptions` | `[]` | Extra `mount(8)` options, e.g. `["noac"]` to disable NFS attribute caching. Applied before the driver's own mandatory options, so a conflicting key (`fs` only: `vers`, `nconnect`, `spread_reads`, `spread_writes`) is overridden by the driver's value. Most StorageClass fields are immutable once created — see below. |
 
 To create both classes and make the shared filesystem the cluster default:
 
@@ -139,8 +140,8 @@ Things to know before enabling:
   StorageClass, Helm owns it, and a later `helm upgrade` restores it to what the chart renders. An
   annotation removed with `kubectl edit` comes back.
 * **Most StorageClass fields are immutable once created.** To change `reclaimPolicy`,
-  `volumeBindingMode`, or `parameters` later, delete the class and let the next upgrade recreate it.
-  Existing PersistentVolumes keep the settings they were created with.
+  `volumeBindingMode`, `parameters`, or `mountOptions` later, delete the class and let the next upgrade
+  recreate it. Existing PersistentVolumes keep the settings they were created with.
 
 ## Usage
 

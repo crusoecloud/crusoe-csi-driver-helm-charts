@@ -21,5 +21,9 @@ allowVolumeExpansion: {{ $sc.allowVolumeExpansion }}
 parameters:
   {{- toYaml . | nindent 2 }}
 {{- end }}
+{{- with $sc.mountOptions }}
+mountOptions:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
 {{- end }}
 {{- end }}
