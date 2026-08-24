@@ -1,3 +1,18 @@
+## v0.10.23
+
+* Bump crusoe-csi-driver to `v0.4.13`. The `fs` driver now serialises `NodePublishVolume` and `NodeUnpublishVolume` per target path. Previously, when an NFS mount ran past kubelet's 2 minute deadline, kubelet re-drove the mount for the same pod while the first attempt was still running. Both attempts passed the already-mounted check and both mounted, the second failed with `EBUSY`, and the teardown that followed removed the mount the first attempt had just completed successfully. The pod stayed in `ContainerCreating` even though a working mount had existed moments earlier. A duplicate call for a target already in flight now returns `Aborted` straight away, so the completed mount survives and the next kubelet retry finds it and starts the pod.
+* **This does not make slow mounts faster.** It stops a slow mount from also destroying a completed one. If your mounts are timing out, they will still time out; they will no longer discard a mount that succeeded.
+* One behaviour change to be aware of: while a publish is still running for a target, an unpublish for that same target is refused until it finishes. A pod deleted during a stalled mount therefore stays in `Terminating` a little longer than before.
+* No change to the `ssd` driver.
+
+### Upgrade Instructions
+
+* Update repositories: `helm repo update`
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.23 -n crusoe-system --reset-then-reuse-values`
+    * `--reset-then-reuse-values` (Helm 3.14 and later) preserves the existing driver configuration (project ID, API keys, NFS settings) without carrying the previous chart's defaults forward. On older Helm, save and re-supply values with `helm get values crusoe-csi-driver -n crusoe-system > values.yaml` (no `--all`) and pass `-f values.yaml`.
+* The `fs` node DaemonSet pods restart on upgrade to pick up the new image. Existing NFS mounts live in the kernel and are unaffected, so only new mounts use the updated path.
+* No topology-label changes, so this is a safe in-place upgrade with no node recreation required.
+
 ## v0.10.22
 
 * The chart can now create the StorageClasses for you, instead of leaving them as example YAML to apply by hand. Two classes are available: `crusoe-ssd` (`ssd.csi.crusoe.ai`, ReadWriteOnce, block or filesystem) and `crusoe-fs` (`fs.csi.crusoe.ai`, ReadWriteOnce and ReadWriteMany). Either can be annotated as the cluster default, so a PersistentVolumeClaim that omits `storageClassName` binds instead of staying `Pending`.
