@@ -1,3 +1,16 @@
+## v0.10.24
+
+* Fix the `fs` node init container erroring on Ubuntu 24.04 worker nodes. The init container checks whether a working VAST NFS driver is already present before installing one. On 24.04 (kernel 6.8) the driver's kernel module is compressed on disk and the driver ships under a different package name than on 22.04, so the earlier check did not recognise the driver that was already installed. It then tried to build and install an older driver over the newer one and failed, leaving the init container in an error state on an otherwise healthy node. The check now uses `vastnfs-ctl status`, which reports a working driver regardless of how it was installed or what its module file is named, so an already-present driver is detected and installation is skipped. Ubuntu 22.04 worker nodes already passed this check and are unaffected.
+* The `fs` node DaemonSet now restarts on chart upgrade when the init script changes, so the fix is applied without waiting for an unrelated restart. Existing NFS mounts live in the kernel and are unaffected; only the init container re-runs.
+* No driver image change (`appVersion` stays `v0.4.13`). The `ssd` driver is unaffected.
+
+### Upgrade Instructions
+
+* Update repositories: `helm repo update`
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.24 -n crusoe-system --reset-then-reuse-values`
+    * `--reset-then-reuse-values` (Helm 3.14 and later) preserves the existing driver configuration (project ID, API keys, NFS settings) without carrying the previous chart's defaults forward. On older Helm, save and re-supply values with `helm get values crusoe-csi-driver -n crusoe-system > values.yaml` (no `--all`) and pass `-f values.yaml`.
+* The `fs` node DaemonSet pods restart on upgrade to re-run the init container. Existing NFS mounts are unaffected.
+
 ## v0.10.23
 
 * Bump crusoe-csi-driver to `v0.4.13`. The `fs` driver now serialises `NodePublishVolume` and `NodeUnpublishVolume` per target path. Previously, when an NFS mount ran past kubelet's 2 minute deadline, kubelet re-drove the mount for the same pod while the first attempt was still running. Both attempts passed the already-mounted check and both mounted, the second failed with `EBUSY`, and the teardown that followed removed the mount the first attempt had just completed successfully. The pod stayed in `ContainerCreating` even though a working mount had existed moments earlier. A duplicate call for a target already in flight now returns `Aborted` straight away, so the completed mount survives and the next kubelet retry finds it and starts the pod.

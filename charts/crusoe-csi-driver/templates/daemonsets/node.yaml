@@ -13,6 +13,13 @@ spec:
     metadata:
       labels:
         app: {{ include "crusoe-csi-driver.fullname" $ }}-{{ $csiType }}
+      {{- if eq $csiType "fs" }}
+      annotations:
+        # Roll the fs node pods when the init script changes, so the fix lands
+        # on upgrade instead of waiting for an unrelated restart to re-run the
+        # init container.
+        checksum/install-nfs-prerequisites-script: {{ include (print $.Template.BasePath "/configmaps/install-nfs-prerequisites-script.yaml") $ | sha256sum }}
+      {{- end }}
     spec:
       hostPID: true
       {{- if and (eq $csiType "fs") $.Values.node.fs.dns.useNodeResolver }}
