@@ -106,7 +106,7 @@ controller:
     image:
       registry: ghcr.io/crusoecloud
       repository: crusoe-csi-driver
-      tag: "v0.4.13"
+      tag: "v0.4.19"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:
@@ -162,7 +162,7 @@ node:
     image:
       registry: ghcr.io/crusoecloud
       repository: crusoe-csi-driver
-      tag: "v0.4.13"
+      tag: "v0.4.19"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:

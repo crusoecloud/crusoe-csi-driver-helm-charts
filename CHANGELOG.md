@@ -1,3 +1,17 @@
+## v0.10.25
+
+* Bump crusoe-csi-driver to `v0.4.19`. The `ssd` driver now allows 15 persistent disk volumes per node, up from 14. A VM takes 16 persistent disks including its boot disk, which leaves 15 for volumes, and the driver had subtracted the boot disk twice. Before this change, a pod that needed a 15th `ssd` volume on a node stayed `Pending` with `node(s) exceed max volume count`, even though the node had room for it.
+* Also includes dependency updates that clear reported CVEs, and a new `fs` node flag, `--nfs-target-override`, which is unset by default and not exposed in chart values. While it is unset, `fs` mounts behave as before.
+
+### Upgrade Instructions
+
+* Update repositories: `helm repo update`
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.25 -n crusoe-system --reset-then-reuse-values`
+    * `--reset-then-reuse-values` (Helm 3.14 and later) preserves the existing driver configuration (project ID, API keys, NFS settings) without carrying the previous chart's defaults forward. On older Helm, save and re-supply values with `helm get values crusoe-csi-driver -n crusoe-system > values.yaml` (no `--all`) and pass `-f values.yaml`.
+* The `ssd` and `fs` node DaemonSet pods restart on upgrade to pick up the new image. Existing NFS mounts and attached persistent disks are unaffected.
+* Existing nodes take the new limit of 15 when their `ssd` node pod restarts during the upgrade, so no node recreation is needed. To check a node: `kubectl get csinode <node> -o jsonpath='{.spec.drivers[?(@.name=="ssd.csi.crusoe.ai")].allocatable.count}'`
+* No topology-label changes.
+
 ## v0.10.24
 
 * Fix the `fs` node init container erroring on Ubuntu 24.04 worker nodes. The init container checks whether a working VAST NFS driver is already present before installing one. On 24.04 (kernel 6.8) the driver's kernel module is compressed on disk and the driver ships under a different package name than on 22.04, so the earlier check did not recognise the driver that was already installed. It then tried to build and install an older driver over the newer one and failed, leaving the init container in an error state on an otherwise healthy node. The check now uses `vastnfs-ctl status`, which reports a working driver regardless of how it was installed or what its module file is named, so an already-present driver is detected and installation is skipped. Ubuntu 22.04 worker nodes already passed this check and are unaffected.
