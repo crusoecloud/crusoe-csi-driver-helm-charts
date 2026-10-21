@@ -35,7 +35,8 @@ code_intelligence:
 # Chart rendering assertions. The chart-testing job in .github/workflows/lint.yaml
 # runs `on: pull_request` and so never fires for a GitLab MR, which left chart
 # changes with no automated validation. This covers the cheap half: helm lint plus
-# a set of render assertions. See hack/test-storageclass-render.sh.
+# a set of render assertions. See hack/test-storageclass-render.sh and
+# hack/test-node-env-render.sh.
 test_charts:
   image:
     name: alpine/helm:3.14.4
@@ -45,6 +46,7 @@ test_charts:
     - apk add --no-cache bash
     - helm lint charts/crusoe-csi-driver
     - bash hack/test-storageclass-render.sh
+    - bash hack/test-node-env-render.sh
   rules:
     - if: '$CI_MERGE_REQUEST_ID'
       changes: &chart-changes

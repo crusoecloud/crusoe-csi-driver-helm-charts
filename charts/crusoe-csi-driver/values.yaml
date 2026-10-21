@@ -75,9 +75,9 @@ crusoe:
     #  name: "crusoe-api-keys"
     #  endpointKeyPath: "CRUSOE_API_ENDPOINT"
   nfs:
-    # Specify the NFS remote ports and IP.
+    # NFS remote ports for the fs node driver. The driver uses them only when the
+    # disk API returns no NFS target for a volume.
     remotePorts: "100.64.0.2-100.64.0.17"
-    ip: "100.64.0.2"
   proxy:
     # Enable proxy support for private clusters without direct internet access.
     # When enabled, HTTP_PROXY, HTTPS_PROXY, and NO_PROXY are set on the CSI driver container.

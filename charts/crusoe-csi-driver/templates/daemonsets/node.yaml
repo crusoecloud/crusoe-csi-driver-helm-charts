@@ -122,10 +122,6 @@ spec:
             - name: NFS_REMOTE_PORTS
               value: {{ quote . }}
             {{- end }}
-            {{- with .ip }}
-            - name: NFS_IP
-              value: {{ quote . }}
-            {{- end }}
             {{- end }}
             {{- with $.Values.crusoe.api }}
             {{- with .endpoint }}

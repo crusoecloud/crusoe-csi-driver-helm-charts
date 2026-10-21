@@ -1,3 +1,17 @@
+## v0.10.26
+
+* Remove the `crusoe.nfs.ip` value. The chart passed it to the node containers as `NFS_IP`, which no driver version reads, so it never had any effect. Nodes have always used the driver's built-in NFS host, and still do.
+* No behaviour change. A values file that still sets `crusoe.nfs.ip` keeps working: Helm ignores the key, as the driver did before.
+* No driver image change (`appVersion` stays `v0.4.19`).
+
+### Upgrade Instructions
+
+* Update repositories: `helm repo update`
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.26 -n crusoe-system --reset-then-reuse-values`
+    * `--reset-then-reuse-values` (Helm 3.14 and later) preserves the existing driver configuration (project ID, API keys, NFS settings) without carrying the previous chart's defaults forward. On older Helm, save and re-supply values with `helm get values crusoe-csi-driver -n crusoe-system > values.yaml` (no `--all`) and pass `-f values.yaml`.
+* The `ssd` and `fs` node DaemonSet pods restart on upgrade because their environment changes. Existing NFS mounts and attached persistent disks are unaffected.
+* No topology-label changes.
+
 ## v0.10.25
 
 * Bump crusoe-csi-driver to `v0.4.19`. The `ssd` driver now allows 15 persistent disk volumes per node, up from 14. A VM takes 16 persistent disks including its boot disk, which leaves 15 for volumes, and the driver had subtracted the boot disk twice. Before this change, a pod that needed a 15th `ssd` volume on a node stayed `Pending` with `node(s) exceed max volume count`, even though the node had room for it.
