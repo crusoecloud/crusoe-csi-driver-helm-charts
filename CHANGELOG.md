@@ -1,3 +1,17 @@
+## v0.10.27
+
+* Bump crusoe-csi-driver to `v0.4.21`, which stops the driver trusting the compromised eMudhra root CA (INC-791). Earlier images trust `emSign ECC Root CA - G3`, so anyone able to intercept the driver's HTTPS calls to the Crusoe API could present a certificate that chains to it. The image moves from Alpine 3.20 to Alpine 3.23.7, whose CA bundle (`ca-certificates-bundle-20261020-r0`) drops the compromised roots, and the driver is built with Go 1.26.10, which rejects them even when a CA bundle still carries them.
+* The image's filesystem tools move to e2fsprogs 1.47.3, `blkid` 2.41.6 and xfsprogs 6.17.0. New ext4 and xfs volumes are formatted with the same features as before, and existing volumes are unaffected.
+* Also includes `v0.4.20`, which changed only the driver repository's CI.
+
+### Upgrade Instructions
+
+* Update repositories: `helm repo update`
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.27 -n crusoe-system --reset-then-reuse-values`
+    * `--reset-then-reuse-values` (Helm 3.14 and later) preserves the existing driver configuration (project ID, API keys, NFS settings) without carrying the previous chart's defaults forward. On older Helm, save and re-supply values with `helm get values crusoe-csi-driver -n crusoe-system > values.yaml` (no `--all`) and pass `-f values.yaml`.
+* The `ssd` and `fs` node DaemonSet pods restart on upgrade to pick up the new image. Existing NFS mounts and attached persistent disks are unaffected.
+* No topology-label changes.
+
 ## v0.10.26
 
 * Remove the `crusoe.nfs.ip` value. The chart passed it to the node containers as `NFS_IP`, which no driver version reads, so it never had any effect. Nodes have always used the driver's built-in NFS host, and still do.
