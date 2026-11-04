@@ -1,5 +1,12 @@
 {{ range $csiType, $csi := .Values.csi }}
 {{ if and $csi.enabled (eq $csiType "fs") }}
+{{- /* Defaults live here as well as in values.yaml, because an upgrade with
+       --reuse-values does not pick up new chart defaults. */}}
+{{- $lock := $csi.nfsLockServices | default dict }}
+{{- $statdPort := $lock.statdPort | default 662 | int }}
+{{- if or (lt $statdPort 1) (gt $statdPort 29999) (eq $statdPort 111) }}
+{{- fail (printf "csi.fs.nfsLockServices.statdPort must be between 1 and 29999 and not 111, got %d" $statdPort) }}
+{{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -18,13 +25,21 @@ data:
     import subprocess
     import os
     import argparse
+    import shlex
     import sys
+    import time
 
     from datetime import datetime, timezone
     from pathlib import Path
 
     CSI_TYPE = "{{ $csiType }}"
     DONE_FILE = Path(f"/opt/crusoe-csi-driver/{CSI_TYPE}/nfs-prerequisites-installed")
+    NFS_LOCK_SERVICES = {{ ternary "True" "False" (ne $lock.enabled false) }}
+    STATD_PORT = {{ $statdPort }}
+    STATD_DROPIN = Path("/etc/systemd/system/rpc-statd.service.d/50-crusoe-csi.conf")
+    STATD_CONF = Path("/etc/nfs.conf.d/50-crusoe-csi.conf")
+    # Where `systemctl add-wants multi-user.target rpc-statd.service` puts its link.
+    STATD_WANTS = Path("/etc/systemd/system/multi-user.target.wants/rpc-statd.service")
 
     def run_command(command, timeout=60):
         try:
@@ -108,23 +123,121 @@ data:
 
         print("The NFS driver has been installed!")
     def verify_nfs_driver():
-        """Verify VAST NFS driver is functional by checking vastnfs-ctl and rpcbind"""
-        # Check vastnfs-ctl status
+        """Verify VAST NFS driver is functional by checking vastnfs-ctl"""
         out, err = run_command("vastnfs-ctl status")
         if err or "version:" not in out:
             print(f"WARNING: vastnfs-ctl status check failed: {err}")
             return False, "VAST NFS driver not functional"
 
         print(f"VAST NFS driver status verified: {out.splitlines()[0]}")
+        return True, None
+    def write_root_file(path, content):
+        """Write a file under /etc through sudo, like the rest of the script."""
+        _, err = run_command(f"sudo mkdir -p {shlex.quote(str(path.parent))} && "
+                             f"printf %s {shlex.quote(content)} | sudo tee {shlex.quote(str(path))} >/dev/null")
+        return err
+    def ensure_nfs_lock_services():
+        """
+        Start rpcbind and rpc-statd on the host and keep statd running.
 
-        # Check rpcbind service
-        out, err = run_command("systemctl is-active rpcbind 2>/dev/null || echo 'inactive'")
-        if "active" not in out:
+        NFSv3 locks go through the kernel's lockd, which asks the local rpc.statd
+        to monitor the server before it sends a lock and fails the lock with
+        ENOLCK if statd does not answer. On Ubuntu, rpc-statd.service is static
+        and mount.nfs normally starts it on demand. The node plugin mounts from
+        its own image, which has no mount.nfs, so nothing starts statd unless we
+        do it here.
+        """
+        if not NFS_LOCK_SERVICES:
+            # Undo our setup so statd stops restarting into a pinned port, but
+            # leave a running statd alone: stopping it would break locks that
+            # are in use.
+            print("csi.fs.nfsLockServices.enabled is false, skipping rpc-statd setup.")
+            # systemd has add-wants but no remove-wants, so remove the link
+            # directly.
+            removed = False
+            for path in (STATD_DROPIN, STATD_CONF, STATD_WANTS):
+                if path.is_symlink() or path.exists():
+                    run_command(f"sudo rm -f {shlex.quote(str(path))}")
+                    removed = True
+            if removed:
+                run_command("sudo systemctl daemon-reload")
+            return True, None
+
+        _, err = run_command("systemctl is-active --quiet rpcbind")
+        if err:
             print("Starting rpcbind service...")
             run_command("sudo systemctl start rpcbind")
             run_command("sudo systemctl enable rpcbind")
 
-        return True, None
+        # nfs-common ships rpc-statd.service, and the CMK worker images
+        # (Ubuntu 22.04 and 24.04) include it. Fail rather than install it:
+        # many customers block internet access from their workers, and a
+        # crash-looping pod with this message gets on-call to fix the image.
+        _, err = run_command("systemctl cat rpc-statd.service >/dev/null 2>&1")
+        if err:
+            return False, "rpc-statd.service not found: the node image needs the nfs-common package"
+
+        # Restart statd if it dies. RestartSec keeps a crash loop under systemd's
+        # default start limit (5 starts in 10s). Our own file name, so an
+        # override.conf written by the user is left alone.
+        dropin = STATD_DROPIN
+        content = "[Service]\nRestart=on-failure\nRestartSec=5s\n"
+        if not dropin.exists() or dropin.read_text() != content:
+            err = write_root_file(dropin, content)
+            if err:
+                return False, f"could not write {dropin}: {err}"
+            run_command("sudo systemctl daemon-reload")
+
+        # rpc-statd.service has no [Install] section, so enable does not work.
+        # add-wants starts it at boot without one.
+        _, err = run_command("sudo systemctl add-wants multi-user.target rpc-statd.service")
+        if err:
+            return False, f"could not enable rpc-statd at boot: {err}"
+
+        # Pin statd's port. statd listens on every address, and without this it
+        # picks a random port on each start, which no firewall rule can cover.
+        # The default, 662, sits below the kernel NFS client's reserved source ports
+        # (665-1023), the Kubernetes NodePort range (30000-32767) and the
+        # kernel's ephemeral range (32768-60999). statd keeps its capabilities
+        # when it drops root, so it can bind 662. Reboot notices go out from
+        # sm-notify on a random reserved port, which a firewall does not need to
+        # match. Files in /etc/nfs.conf.d override /etc/nfs.conf, which we leave
+        # alone.
+        statd_port = STATD_PORT
+        conf = STATD_CONF
+        conf_content = f"[statd]\nport = {statd_port}\n"
+        conf_changed = not conf.exists() or conf.read_text() != conf_content
+        if conf_changed:
+            err = write_root_file(conf, conf_content)
+            if err:
+                return False, f"could not write {conf}: {err}"
+
+        # lockd finds statd through rpcbind, so check the registration, not the unit.
+        def statd_registered():
+            out, err = run_command("rpcinfo -p 127.0.0.1")
+            return not err and any(l.split()[0] == "100024" and l.split()[3] == str(statd_port)
+                                   for l in out.splitlines() if len(l.split()) >= 4)
+
+        # A running statd keeps its old port until it restarts, and one that
+        # started while 662 was taken stays up unregistered, so restart in both
+        # cases. A restart does not drop locks the node holds.
+        if not conf_changed and statd_registered():
+            print(f"rpc-statd is running and registered with rpcbind on port {statd_port}.")
+            return True, None
+        def port_holders():
+            out, _ = run_command(f"sudo ss -Hlntup 'sport = :{statd_port}'")
+            return "; ".join(" ".join(l.split()) for l in out.splitlines()) if out else "nothing"
+
+        _, err = run_command("sudo systemctl restart rpc-statd")
+        if err:
+            return False, f"could not restart rpc-statd ({err}) Listening on port {statd_port}: {port_holders()}"
+        for _ in range(10):
+            if statd_registered():
+                print(f"rpc-statd is running and registered with rpcbind on port {statd_port}.")
+                return True, None
+            time.sleep(1)
+        return False, (f"rpc-statd did not register with rpcbind on port {statd_port}. "
+                       f"Listening on port {statd_port}: {port_holders()}")
     def check_if_VAST_NFS_driver_installed():
         # vastnfs-ctl status reports the running version and loaded modules for
         # an installed driver, regardless of how it was installed or what its
@@ -170,8 +283,8 @@ data:
         check all existing NFS mounts, and update the read-ahead cache
         add the udev rule for read-ahead cache
         """
-        out, err = run_command("ls /etc/udev/rules.d/99-nfs.rules")
-        if out and "/etc/udev/rules.d/99-nfs.rules" in out:
+        out, err = run_command("ls /etc/udev/rules.d/95-nfs-readahead.rules")
+        if out and "/etc/udev/rules.d/95-nfs-readahead.rules" in out:
             print("udev rule to apply read-ahead cache already exists, skipping")
             return
 
@@ -191,6 +304,11 @@ data:
             print(f"ERROR: could not reload udev rules: {err}")
             return
 
+        out, _ = run_command("grep -qx '\\[nfsrahead\\]' /etc/nfs.conf && echo present")
+        if out == "present":
+            print("[nfsrahead] already in /etc/nfs.conf, skipping")
+            print("Updated readahead cache settings successfully.")
+            return
         out, err = run_command("""echo '[nfsrahead]
             nfs=16384
             nfs4=16384
@@ -275,6 +393,10 @@ data:
 
             if is_functional:
                 print("NFS driver is healthy, skipping installation.")
+                ok, err = ensure_nfs_lock_services()
+                if not ok:
+                    print(f"ERROR: {err}")
+                    sys.exit(1)
                 return
             else:
                 print(f"Health check failed: {err}")
@@ -304,6 +426,13 @@ data:
                 msg = f"NFS prerequisites installed and validated at {timestamp}"
                 DONE_FILE.write_text(msg + "\n")
                 print(msg)
+                # statd runs after the marker, so a statd failure fails the pod
+                # and the retry takes the health-check path, which redoes only
+                # the statd setup.
+                ok, err = ensure_nfs_lock_services()
+                if not ok:
+                    print(f"ERROR: {err}")
+                    sys.exit(1)
             else:
                 print(f"ERROR: Installation completed but validation failed: {err}")
                 print("Installation will be retried on next pod restart.")

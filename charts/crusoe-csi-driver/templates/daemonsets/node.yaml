@@ -61,7 +61,7 @@ spec:
             - "-c"
             - |
               cp /root/install.py /host/root/install.py
-              nsenter -t 1 -m -u -i -n -p bash -ex -c "
+              nsenter -t 1 -m -u -i -n -p bash -ex -o pipefail -c "
               export DEBIAN_FRONTEND=noninteractive &&
               PACKAGES_TO_INSTALL=() &&
               command -v sudo >/dev/null 2>&1 || PACKAGES_TO_INSTALL+=(sudo) &&

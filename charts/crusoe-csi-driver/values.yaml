@@ -14,6 +14,26 @@ csi:
   fs:
     enabled: true
     driverName: "fs.csi.crusoe.ai"
+    # NFSv3 locks need rpc.statd running on each node. The NFS prerequisites init
+    # container starts it, restarts it if it exits, starts it at boot, and pins it
+    # to statdPort so a firewall rule can cover it. The init container fails, and
+    # the node plugin does not start on that node, if the node image has no
+    # nfs-common package or another process holds statdPort.
+    nfsLockServices:
+      # Set to false to skip the statd setup, for example on an image without
+      # nfs-common. The init container then removes the files it wrote but leaves
+      # a running statd alone. Without statd, NFSv3 locks fail or hang and are not
+      # recovered after a reboot, and on Ubuntu 24.04 nodes the first mount of each
+      # NFS server stalls for about 60 seconds. Only turn this off on clusters
+      # where every NFS mount uses the `nolock` mount option (for example through
+      # storageClasses.fs.mountOptions), which needs neither locks nor statd.
+      # Existing PersistentVolumes keep the mount options they were created with.
+      enabled: true
+      # Port statd listens on, TCP and UDP, on every address. Pick a port below
+      # the kernel NFS client's reserved source ports (665-1023) and the
+      # Kubernetes NodePort range (30000-32767), that nothing else on the node
+      # uses.
+      statdPort: 662
 
 # StorageClasses for each driver. Both are OFF by default so that installing or
 # upgrading this chart never creates a StorageClass you did not ask for, and never
