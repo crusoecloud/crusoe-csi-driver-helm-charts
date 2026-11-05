@@ -36,7 +36,8 @@ code_intelligence:
 # runs `on: pull_request` and so never fires for a GitLab MR, which left chart
 # changes with no automated validation. This covers the cheap half: helm lint plus
 # a set of render assertions. See hack/test-storageclass-render.sh,
-# hack/test-node-env-render.sh and hack/test-nfs-lock-render.sh.
+# hack/test-node-env-render.sh, hack/test-nfs-lock-render.sh and
+# hack/test-driver-image-render.sh.
 test_charts:
   image:
     name: alpine/helm:3.14.4
@@ -48,6 +49,7 @@ test_charts:
     - bash hack/test-storageclass-render.sh
     - bash hack/test-node-env-render.sh
     - bash hack/test-nfs-lock-render.sh
+    - bash hack/test-driver-image-render.sh
   rules:
     - if: '$CI_MERGE_REQUEST_ID'
       changes: &chart-changes

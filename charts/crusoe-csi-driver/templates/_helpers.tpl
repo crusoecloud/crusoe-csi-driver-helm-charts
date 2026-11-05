@@ -110,3 +110,19 @@ Usage: include "crusoe-csi-driver.image" (dict "global" $.Values.global "registr
 {{- printf "%s:%s" .repository .tag -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Render the crusoe-csi-driver image for one CSI type (ssd or fs).
+Each of registry, repository and tag comes from csi.<type>.image when non-empty,
+and otherwise from the shared node or controller image passed as "base". The result
+goes through crusoe-csi-driver.image, so global.imageRegistry still wins.
+Usage: include "crusoe-csi-driver.driverImage" (dict "global" $.Values.global "csi" $csi "base" $.Values.node.crusoeCsiDriver.image)
+*/}}
+{{- define "crusoe-csi-driver.driverImage" -}}
+{{- $override := .csi.image | default dict -}}
+{{- include "crusoe-csi-driver.image" (dict
+      "global" .global
+      "registry" ($override.registry | default .base.registry)
+      "repository" ($override.repository | default .base.repository)
+      "tag" ($override.tag | default .base.tag)) -}}
+{{- end -}}

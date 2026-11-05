@@ -41,7 +41,7 @@ spec:
       {{- end }}
       containers:
         - name: crusoe-csi-driver
-          image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.controller.crusoeCsiDriver.image.registry "repository" $.Values.controller.crusoeCsiDriver.image.repository "tag" $.Values.controller.crusoeCsiDriver.image.tag) | quote }}
+          image: {{ include "crusoe-csi-driver.driverImage" (dict "global" $.Values.global "csi" $csi "base" $.Values.controller.crusoeCsiDriver.image) | quote }}
           imagePullPolicy: {{ $.Values.controller.crusoeCsiDriver.image.imagePullPolicy }}
           args:
             - "--crusoe-csi-driver-type={{ $csiType }}"

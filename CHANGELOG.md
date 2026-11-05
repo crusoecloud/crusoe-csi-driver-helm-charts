@@ -1,3 +1,17 @@
+## v0.10.29
+
+* New optional values `csi.ssd.image` and `csi.fs.image` (`registry`, `repository`, `tag`) set the `crusoe-csi-driver` image for one driver type. A value set there applies to that type's node DaemonSet and controller Deployment, so the `ssd` and `fs` drivers can be upgraded or held back separately. Each field left empty falls back to `node.crusoeCsiDriver.image` or `controller.crusoeCsiDriver.image`, and `global.imageRegistry` still takes precedence over a per-type `registry`. See "Driver image per type" in the README.
+* All new values default to empty, so the chart renders the same pods as v0.10.28.
+* No driver image change (`appVersion` stays `v0.4.21`).
+
+### Upgrade Instructions
+
+* Update repositories: `helm repo update`
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.29 -n crusoe-system --reset-then-reuse-values`
+    * `--reset-then-reuse-values` (Helm 3.14 and later) preserves the existing driver configuration (project ID, API keys, NFS settings) without carrying the previous chart's defaults forward. On older Helm, save and re-supply values with `helm get values crusoe-csi-driver -n crusoe-system > values.yaml` (no `--all`) and pass `-f values.yaml`.
+* No pods restart on upgrade.
+* No topology-label changes.
+
 ## v0.10.28
 
 * The `fs` node plugin now starts `rpc-statd` on each node and keeps it running (CRUSOE-120930). NFSv3 locks need statd, and on Ubuntu `mount.nfs` normally starts it, but the node plugin mounts from its own image, which has no `mount.nfs`. On nodes where statd had died, locks failed with `ENOLCK` ("No locks available"). On nodes that never had statd, the first lock (Ubuntu 22.04) or the first mount (Ubuntu 24.04) per NFS server stalled for about 60 seconds, and statd never recorded the server, so locks were not recovered after a reboot.

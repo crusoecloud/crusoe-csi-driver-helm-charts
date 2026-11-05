@@ -81,6 +81,48 @@ The name of the secret containing the access and secret keys can be changed by m
 
 The persistent disk and shared filesystem drivers operate independently, and can be enabled or disabled by modifying the `csi.ssd.enabled` and `csi.fs.enabled` values.
 
+## Driver image per type
+
+Both drivers run the same `crusoe-csi-driver` image. By default the node pods of both types take it
+from `node.crusoeCsiDriver.image`, and the controller pods of both types from
+`controller.crusoeCsiDriver.image`, so changing the tag restarts the `ssd` and `fs` pods together.
+
+To run a different image for one type, set it under `csi.<type>.image`. It applies to that type's node
+DaemonSet and controller Deployment, and only those pods restart.
+
+| value | default | description |
+|---|---|---|
+| `csi.<type>.image.registry` | `""` | Registry for this type. Empty uses the shared node or controller registry. `global.imageRegistry` still takes precedence. |
+| `csi.<type>.image.repository` | `""` | Repository for this type. Empty uses the shared node or controller repository. |
+| `csi.<type>.image.tag` | `""` | Tag for this type. Empty uses the shared node or controller tag. |
+
+Each field falls back on its own, so setting only `tag` keeps the shared registry and repository.
+`imagePullPolicy` and `imagePullSecrets` stay shared.
+
+To upgrade the chart but keep the `fs` pods on the image they run now, pin `fs` to its current tag:
+
+```shell
+helm upgrade <chart alias> <repo alias>/crusoe-csi-driver -n crusoe-system \
+  --reset-then-reuse-values \
+  --set csi.fs.image.tag=<current tag>
+```
+
+The `ssd` pods move to the chart's new image and the `fs` pods keep running. To move `fs` later, clear
+the pin:
+
+```shell
+helm upgrade <chart alias> <repo alias>/crusoe-csi-driver -n crusoe-system \
+  --reset-then-reuse-values \
+  --set csi.fs.image.tag=""
+```
+
+A pin stays in place through later `helm upgrade --reset-then-reuse-values` runs until you clear it,
+and holds that type on the pinned image whatever the chart's default. Check for pins with
+`helm get values <chart alias> -n crusoe-system`.
+
+A per-type image only separates image changes. When a chart release changes anything else in a shared
+pod template, both types still restart; the changelog says which pods restart for each release.
+
 ## StorageClasses
 
 The chart can create a StorageClass for each driver. **Both are off by default**, so installing or

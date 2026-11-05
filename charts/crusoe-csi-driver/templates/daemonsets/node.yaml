@@ -93,7 +93,7 @@ spec:
       {{- end }}
       containers:
         - name: crusoe-csi-driver
-          image: {{ include "crusoe-csi-driver.image" (dict "global" $.Values.global "registry" $.Values.node.crusoeCsiDriver.image.registry "repository" $.Values.node.crusoeCsiDriver.image.repository "tag" $.Values.node.crusoeCsiDriver.image.tag) | quote }}
+          image: {{ include "crusoe-csi-driver.driverImage" (dict "global" $.Values.global "csi" $csi "base" $.Values.node.crusoeCsiDriver.image) | quote }}
           imagePullPolicy: {{ $.Values.node.crusoeCsiDriver.image.imagePullPolicy }}
           command:
             - nsenter

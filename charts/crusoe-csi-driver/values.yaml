@@ -11,9 +11,27 @@ csi:
   ssd:
     enabled: true
     driverName: "ssd.csi.crusoe.ai"
+    # Optional crusoe-csi-driver image for the ssd driver only. Applies to both the
+    # ssd node DaemonSet and the ssd controller Deployment. Each empty field falls
+    # back to node.crusoeCsiDriver.image or controller.crusoeCsiDriver.image, so
+    # leaving all three empty keeps the shared image. Set a tag here to upgrade or
+    # hold back ssd without restarting the fs pods. A tag set here (a pin) stays
+    # through `helm upgrade --reset-then-reuse-values`; clear it with
+    # --set csi.ssd.image.tag="" to go back to the chart's default tag.
+    # global.imageRegistry still takes precedence over csi.ssd.image.registry.
+    image:
+      registry: ""
+      repository: ""
+      tag: ""
   fs:
     enabled: true
     driverName: "fs.csi.crusoe.ai"
+    # Optional crusoe-csi-driver image for the fs driver only. Same rules as
+    # csi.ssd.image.
+    image:
+      registry: ""
+      repository: ""
+      tag: ""
     # NFSv3 locks need rpc.statd running on each node. The NFS prerequisites init
     # container starts it, restarts it if it exits, starts it at boot, and pins it
     # to statdPort so a firewall rule can cover it. The init container fails, and
