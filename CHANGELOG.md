@@ -1,3 +1,18 @@
+## v0.10.30
+
+* The controller sidecars (`csi-attacher`, `csi-provisioner`, `csi-resizer`) now wait up to 6 minutes for each driver call, set with `--timeout`. They used to use their built-in defaults (15 seconds for the attacher, 10 seconds for the provisioner and the resizer), while the driver waits up to 5 minutes for the Crusoe API operation behind each call. When an operation took longer than the sidecar's timeout, the sidecar cancelled the call, and the PVC showed `DeadlineExceeded` instead of the reason the operation failed, or kept retrying a create that was still running.
+* New values `controller.attacher.timeout`, `controller.provisioner.timeout` and `controller.resizer.timeout` (default `"6m"`). Keep them above 5 minutes. Setting one to `""` removes the flag, so that sidecar uses its built-in default again.
+* Bump crusoe-csi-driver to `v0.4.24`. When its 5-minute wait runs out, the driver now reports the operation as still in progress (`DeadlineExceeded`), with the last status read error if reads were failing, instead of a generic error. A failed status read no longer fails the call: the driver retries it, backing off up to 15 seconds between reads.
+* Also includes `v0.4.22`, which names the right RPC in the `fs` `NodeExpandVolume` error, and `v0.4.23`, which changed only the driver repository's CI.
+
+### Upgrade Instructions
+
+* Update repositories: `helm repo update`
+* Update chart: `helm upgrade crusoe-csi-driver <repo alias>/crusoe-csi-driver --version 0.10.30 -n crusoe-system --reset-then-reuse-values`
+    * `--reset-then-reuse-values` (Helm 3.14 and later) preserves the existing driver configuration (project ID, API keys, NFS settings) without carrying the previous chart's defaults forward. On older Helm, save and re-supply values with `helm get values crusoe-csi-driver -n crusoe-system > values.yaml` (no `--all`) and pass `-f values.yaml`. With `--reuse-values` neither the new timeouts nor the `v0.4.24` image are applied, because the stored values predate them.
+* The `fs` and `ssd` controller pods and node DaemonSet pods restart on upgrade to pick up the new image. Existing NFS mounts and attached persistent disks are unaffected.
+* No topology-label changes.
+
 ## v0.10.29
 
 * New optional values `csi.ssd.image` and `csi.fs.image` (`registry`, `repository`, `tag`) set the `crusoe-csi-driver` image for one driver type. A value set there applies to that type's node DaemonSet and controller Deployment, so the `ssd` and `fs` drivers can be upgraded or held back separately. Each field left empty falls back to `node.crusoeCsiDriver.image` or `controller.crusoeCsiDriver.image`, and `global.imageRegistry` still takes precedence over a per-type `registry`. See "Driver image per type" in the README.

@@ -144,7 +144,7 @@ controller:
     image:
       registry: ghcr.io/crusoecloud
       repository: crusoe-csi-driver
-      tag: "v0.4.21"
+      tag: "v0.4.24"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:
@@ -154,17 +154,26 @@ controller:
       limits:
         cpu: 100m
         memory: 200Mi
+  # timeout is how long each sidecar waits for one driver call (--timeout).
+  # The driver waits up to 5m for the Crusoe API operation behind a create,
+  # delete, attach, detach or resize, so the sidecar must wait longer than that,
+  # or it cancels the call before the driver can report why it failed. Set it to
+  # "" to use the sidecar's own default (15s for attacher, 10s for provisioner
+  # and resizer).
   attacher:
+    timeout: "6m"
     image:
       registry: registry.k8s.io
       repository: sig-storage/csi-attacher
       tag: "v4.8.1"
   provisioner:
+    timeout: "6m"
     image:
       registry: registry.k8s.io
       repository: sig-storage/csi-provisioner
       tag: "v5.2.0"
   resizer:
+    timeout: "6m"
     image:
       registry: registry.k8s.io
       repository: sig-storage/csi-resizer
@@ -200,7 +209,7 @@ node:
     image:
       registry: ghcr.io/crusoecloud
       repository: crusoe-csi-driver
-      tag: "v0.4.21"
+      tag: "v0.4.24"
       imagePullSecrets: [ ]
       imagePullPolicy: IfNotPresent
     resources:

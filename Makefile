@@ -30,12 +30,13 @@ lint-ci: ## Verifies `golangci-lint` passes and outputs in CI-friendly format
 	@echo "==> $@"
 	@for f in $(shell ls ${CHART_DIR}); do helm lint ${CHART_DIR}/$${f}; done
 .PHONY: test-render
-test-render: ## Assert the chart renders correctly (StorageClasses, node env, driver image)
+test-render: ## Assert the chart renders correctly (StorageClasses, node env, driver image, sidecar timeouts)
 	@echo "==> $@"
 	@hack/test-storageclass-render.sh
 	@hack/test-node-env-render.sh
 	@hack/test-nfs-lock-render.sh
 	@hack/test-driver-image-render.sh
+	@hack/test-sidecar-timeout-render.sh
 
 .PHONY: test-upgrade
 test-upgrade: ## Assert upgrade behaviour against a running cluster (kind is enough)

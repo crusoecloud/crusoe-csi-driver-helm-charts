@@ -120,6 +120,9 @@ spec:
             - "--csi-address=/csi/{{ $csiType }}-controller.sock"
             - "--http-endpoint=0.0.0.0:8081"
             - "--metrics-path=/metrics"
+            {{- with $.Values.controller.attacher.timeout }}
+            - "--timeout={{ . }}"
+            {{- end }}
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -134,6 +137,9 @@ spec:
             - "--controller-publish-readonly=true"
             - "--http-endpoint=0.0.0.0:8082"
             - "--metrics-path=/metrics"
+            {{- with $.Values.controller.provisioner.timeout }}
+            - "--timeout={{ . }}"
+            {{- end }}
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -145,6 +151,9 @@ spec:
             - "--handle-volume-inuse-error=true"
             - "--http-endpoint=0.0.0.0:8083"
             - "--metrics-path=/metrics"
+            {{- with $.Values.controller.resizer.timeout }}
+            - "--timeout={{ . }}"
+            {{- end }}
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
